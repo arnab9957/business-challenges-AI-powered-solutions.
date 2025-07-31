@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/analyze-business-data.ts';
-import '@/ai/flows/generate-recommendations.ts';
+import '@/ai/flows/generate-solutions.ts';
+import '@/ai/schemas/generate-solutions-schemas.ts';

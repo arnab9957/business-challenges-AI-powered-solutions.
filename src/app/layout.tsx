@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: 'SME Insights Navigator',
-  description: 'AI-Powered Business Diagnostics and Strategy',
+  description: 'AI-Powered Solutions for Your Business Challenges',
 };
 
 export default function RootLayout({

@@ -1,155 +1,87 @@
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { analyzeBusinessData } from '@/ai/flows/analyze-business-data';
-import { generateRecommendations } from '@/ai/flows/generate-recommendations';
+import { generateSolutions } from '@/ai/flows/generate-solutions';
+import type { GenerateSolutionsOutput } from '@/ai/schemas/generate-solutions-schemas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader } from '@/components/loader';
 import { Logo } from '@/components/icons/logo';
 import {
-  DatabaseZap,
-  Users,
-  ClipboardList,
+  Lightbulb,
+  Briefcase,
   MessageSquareText,
-  ShieldCheck,
-  Landmark,
-  Network,
-  BarChart,
-  Target,
-  ListChecks,
-  FileText,
   ArrowRight,
   RefreshCw,
+  Target,
+  BarChart,
+  ListChecks
 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import { Bar, BarChart as RechartsBarChart, XAxis, YAxis, CartesianGrid } from "recharts"
+
+const commonProblems = [
+  { id: 'low_sales', label: 'Low Sales / Revenue' },
+  { id: 'marketing_ineffective', label: 'Ineffective Marketing' },
+  { id: 'high_costs', label: 'High Operational Costs' },
+  { id: 'customer_retention', label: 'Poor Customer Retention' },
+  { id: 'employee_turnover', label: 'High Employee Turnover' },
+  { id: 'supply_chain', label: 'Supply Chain Issues' },
+] as const;
 
 const formSchema = z.object({
-  erpData: z.string().optional(),
-  crmData: z.string().optional(),
-  questionnaire: z.object({
-    q1: z.string().optional(),
-    q2: z.string().optional(),
-  }),
-  challenges: z.string().min(10, 'Please describe your challenges in more detail.'),
-  analysisType: z.enum(['SWOT', 'PESTLE', "Porter's Five Forces"]),
+  businessContext: z.string().optional(),
+  commonProblems: z.array(z.string()).optional(),
+  customProblem: z.string().min(10, 'Please describe your problem in more detail.'),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-type AnalysisResult = {
-  analysis: string;
-  recommendations: string[];
-  kpis: string[];
-};
-
-type KpiChartDataItem = {
-  name: string;
-  fullName: string;
-  current: number;
-  target: number;
-};
 
 export default function Home() {
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [result, setResult] = useState<GenerateSolutionsOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [kpiChartData, setKpiChartData] = useState<KpiChartDataItem[]>([]);
   const { toast } = useToast();
 
-  const { control, handleSubmit, watch } = useForm<FormData>({
+  const { control, handleSubmit, register, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      erpData: '',
-      crmData: '',
-      questionnaire: {
-        q1: '',
-        q2: '',
-      },
-      challenges: '',
-      analysisType: 'SWOT',
+      businessContext: '',
+      commonProblems: [],
+      customProblem: '',
     },
   });
-
-  const analysisType = watch('analysisType');
-
-  useEffect(() => {
-    if (result?.kpis) {
-      const data = result.kpis.map((kpi, index) => {
-        const match = kpi.match(/(\d+)%/);
-        const percentage = match ? parseInt(match[1], 10) : (Math.random() * 20 + 5);
-        const name = kpi.replace(/by \d+% in the next (quarter|year)/, '').trim();
-        const isIncrease = kpi.toLowerCase().includes('increase');
-        
-        return {
-          name: name.length > 30 ? `KPI ${index + 1}` : name,
-          fullName: name,
-          current: 100,
-          target: isIncrease ? 100 + percentage : 100 - percentage,
-        };
-      });
-      setKpiChartData(data);
-    }
-  }, [result?.kpis]);
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
-      const businessData = `
-        ERP Data: ${data.erpData || 'Not provided'}.
-        CRM Data: ${data.crmData || 'Not provided'}.
-        Questionnaire Answers: 
-        - Strengths/Opportunities: ${data.questionnaire.q1 || 'Not provided'}.
-        - Weaknesses/Threats: ${data.questionnaire.q2 || 'Not provided'}.
-        User Described Challenges: ${data.challenges}.
-      `;
+      const selectedProblems = data.commonProblems
+        ?.map(id => commonProblems.find(p => p.id === id)?.label)
+        .filter(Boolean) as string[];
 
-      const analysisResponse = await analyzeBusinessData({
-        businessData,
-        analysisType: data.analysisType,
+      const response = await generateSolutions({
+        businessContext: data.businessContext || 'Not provided',
+        commonProblems: selectedProblems,
+        customProblem: data.customProblem,
       });
 
-      if (!analysisResponse || !analysisResponse.analysisResult) {
-        throw new Error('Analysis failed to generate a result.');
+      if (!response || !response.solutions || !response.kpis) {
+        throw new Error('Failed to generate a valid response from AI.');
       }
       
-      const recommendationsResponse = await generateRecommendations({
-        businessDiagnosis: analysisResponse.analysisResult,
-      });
-
-      setResult({
-        analysis: analysisResponse.analysisResult,
-        recommendations: recommendationsResponse.recommendations,
-        kpis: recommendationsResponse.kpis,
-      });
+      setResult(response);
 
     } catch (error) {
       console.error(error);
       toast({
         variant: 'destructive',
         title: 'An error occurred',
-        description: 'Failed to generate insights. Please try again.',
+        description: 'Failed to generate solutions. Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -166,7 +98,7 @@ export default function Home() {
         <div className="flex items-center gap-3">
           <Logo className="h-8 w-8" />
           <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent to-primary">
-            Your Business Insights
+            Your Action Plan
           </h1>
         </div>
         <Button onClick={handleReset} variant="outline">
@@ -174,38 +106,17 @@ export default function Home() {
           Start Over
         </Button>
       </div>
-      <Tabs defaultValue="diagnosis" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="diagnosis"><FileText className="mr-2 h-4 w-4" />Diagnosis</TabsTrigger>
-          <TabsTrigger value="recommendations"><ListChecks className="mr-2 h-4 w-4" />Recommendations</TabsTrigger>
-          <TabsTrigger value="kpis"><Target className="mr-2 h-4 w-4" />KPIs</TabsTrigger>
-        </TabsList>
-        <TabsContent value="diagnosis">
+      <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>AI-Powered Business Analysis</CardTitle>
+              <CardTitle className="flex items-center gap-2"><ListChecks /> Recommended Solutions</CardTitle>
               <CardDescription>
-                Here is the {analysisType} analysis based on the data you provided.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed p-4 bg-secondary rounded-md">
-                {result?.analysis}
-              </pre>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="recommendations">
-          <Card>
-            <CardHeader>
-              <CardTitle>Actionable Recommendations</CardTitle>
-              <CardDescription>
-                Strategic initiatives to drive growth and efficiency.
+                Actionable steps to address your business problems.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-4">
-                {result?.recommendations.map((rec, index) => (
+                {result?.solutions.map((rec, index) => (
                   <li key={index} className="flex items-start gap-4 p-4 bg-secondary rounded-md">
                     <ArrowRight className="h-5 w-5 mt-1 text-primary shrink-0"/>
                     <span className="text-sm">{rec}</span>
@@ -214,60 +125,29 @@ export default function Home() {
               </ul>
             </CardContent>
           </Card>
-        </TabsContent>
-        <TabsContent value="kpis">
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card>
+          <Card>
               <CardHeader>
-                <CardTitle>Key Performance Indicators</CardTitle>
-                 <CardDescription>Metrics to track your success.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Target /> Key Performance Indicators</CardTitle>
+                 <CardDescription>Metrics to track the success of your solutions.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>KPI</TableHead>
-                      <TableHead className="text-right">Target</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {result?.kpis.map((kpi, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{kpi.split('by')[0]}</TableCell>
-                        <TableCell className="text-right text-primary font-bold">{kpi.match(/by (.*)/)?.[1]}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-            <Card>
-               <CardHeader>
-                <CardTitle>KPI Visualization</CardTitle>
-                <CardDescription>A visual representation of your goals.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={{}} className="h-[300px] w-full">
-                  <RechartsBarChart data={kpiChartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="current" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="target" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  </RechartsBarChart>
-                </ChartContainer>
+                <ul className="space-y-4">
+                  {result?.kpis.map((kpi, index) => (
+                    <li key={index} className="flex items-start gap-4 p-4 bg-secondary rounded-md">
+                       <BarChart className="h-5 w-5 mt-1 text-primary shrink-0"/>
+                       <span className="text-sm">{kpi}</span>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 
   const renderForm = () => (
     <div className="container mx-auto p-4 sm:p-6 md:p-8">
-      {isLoading && <Loader text="Generating your business insights..." />}
+      {isLoading && <Loader text="Generating your solutions..." />}
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <div className="flex justify-center items-center gap-4 mb-4">
@@ -277,119 +157,78 @@ export default function Home() {
             </h1>
           </div>
           <p className="text-muted-foreground text-lg">
-            Unlock AI-powered diagnostics for your business strategy.
+            Describe your business challenges and get AI-powered solutions.
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><DatabaseZap /> Connect Data Sources</CardTitle>
-              <CardDescription>Securely connect to your business systems for automated data extraction. (Optional)</CardDescription>
+              <CardTitle className="flex items-center gap-2"><Briefcase /> Business Context</CardTitle>
+              <CardDescription>Provide some background about your company. (Optional)</CardDescription>
             </CardHeader>
-            <CardContent className="grid sm:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="erpData" className="flex items-center gap-2"><Users className="h-4 w-4" /> ERP Data (e.g., financials, inventory)</Label>
+            <CardContent>
                 <Controller
-                  name="erpData"
+                  name="businessContext"
                   control={control}
                   render={({ field }) => (
-                    <Textarea {...field} id="erpData" placeholder="Paste your ERP data here..." className="h-24" />
+                    <Textarea {...field} placeholder="e.g., We are a small e-commerce business selling handmade jewelry. Our revenue has been flat for the last 6 months." className="h-24" />
                   )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="crmData" className="flex items-center gap-2"><Users className="h-4 w-4" /> CRM Data (e.g., sales, customer feedback)</Label>
-                <Controller
-                  name="crmData"
-                  control={control}
-                  render={({ field }) => (
-                    <Textarea {...field} id="crmData" placeholder="Paste your CRM data here..." className="h-24" />
-                  )}
-                />
-              </div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><ClipboardList /> Answer Questionnaire</CardTitle>
-              <CardDescription>Guide the AI with structured assessments of your business.</CardDescription>
+              <CardTitle className="flex items-center gap-2"><Lightbulb /> Common Problems</CardTitle>
+              <CardDescription>Select any common challenges your business is facing.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-               <div className="space-y-2">
-                <Label htmlFor="q1">What are your company's key strengths and market opportunities?</Label>
-                <Controller
-                  name="questionnaire.q1"
-                  control={control}
-                  render={({ field }) => (
-                    <Input {...field} id="q1" placeholder="e.g., Strong brand recognition, growing market demand" />
-                  )}
-                />
-              </div>
-               <div className="space-y-2">
-                <Label htmlFor="q2">What are your company's main weaknesses and potential threats?</Label>
-                <Controller
-                  name="questionnaire.q2"
-                  control={control}
-                  render={({ field }) => (
-                    <Input {...field} id="q2" placeholder="e.g., High operational costs, new competitors" />
-                  )}
-                />
-              </div>
+            <CardContent>
+              <Controller
+                name="commonProblems"
+                control={control}
+                render={({ field }) => (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {commonProblems.map((problem) => (
+                      <div key={problem.id} className="flex items-start space-x-2">
+                        <Checkbox
+                          id={problem.id}
+                          checked={field.value?.includes(problem.id)}
+                          onCheckedChange={(checked) => {
+                            return checked
+                              ? field.onChange([...(field.value || []), problem.id])
+                              : field.onChange(
+                                  field.value?.filter(
+                                    (value) => value !== problem.id
+                                  )
+                                );
+                          }}
+                        />
+                        <Label htmlFor={problem.id} className="font-normal cursor-pointer -translate-y-0.5">
+                          {problem.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><MessageSquareText /> Describe Your Challenges</CardTitle>
-              <CardDescription>Use natural language to tell us about your challenges and concerns.</CardDescription>
+              <CardTitle className="flex items-center gap-2"><MessageSquareText /> Describe Your Main Problem</CardTitle>
+              <CardDescription>In your own words, what is the single biggest challenge you want to solve?</CardDescription>
             </CardHeader>
             <CardContent>
               <Controller
-                name="challenges"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <>
-                    <Textarea {...field} placeholder="Describe your business goals, operational issues, market positioning, etc." className="h-32" />
-                    {fieldState.error && <p className="text-sm text-destructive mt-2">{fieldState.error.message}</p>}
-                  </>
-                )}
-              />
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-                <CardTitle>Choose Analysis Framework</CardTitle>
-                <CardDescription>Select the diagnostic tool you want to use.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Controller
-                name="analysisType"
+                name="customProblem"
                 control={control}
                 render={({ field }) => (
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="grid sm:grid-cols-3 gap-4"
-                  >
-                    <Label htmlFor="swot" className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
-                      <RadioGroupItem value="SWOT" id="swot" className="sr-only" />
-                      <ShieldCheck className="mb-3 h-6 w-6" />
-                      SWOT
-                    </Label>
-                    <Label htmlFor="pestle" className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
-                      <RadioGroupItem value="PESTLE" id="pestle" className="sr-only" />
-                      <Landmark className="mb-3 h-6 w-6" />
-                      PESTLE
-                    </Label>
-                    <Label htmlFor="porter" className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
-                      <RadioGroupItem value="Porter's Five Forces" id="porter" className="sr-only" />
-                      <Network className="mb-3 h-6 w-6" />
-                      Porter's Five Forces
-                    </Label>
-                  </RadioGroup>
+                  <>
+                    <Textarea {...field} placeholder="Describe your primary goal, main operational issue, key market concern, etc." className="h-32" />
+                    {errors.customProblem && <p className="text-sm text-destructive mt-2">{errors.customProblem.message}</p>}
+                  </>
                 )}
               />
             </CardContent>
@@ -397,7 +236,7 @@ export default function Home() {
 
           <div className="flex justify-end">
             <Button type="submit" size="lg" className="bg-gradient-to-r from-accent to-primary text-primary-foreground font-bold text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-shadow duration-300" disabled={isLoading}>
-              Generate Insights
+              Generate Solutions
               <ArrowRight className="ml-2 h-5 w-5"/>
             </Button>
           </div>
