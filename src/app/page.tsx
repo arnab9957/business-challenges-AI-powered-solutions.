@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -19,10 +20,10 @@ import {
   Briefcase,
   MessageSquareText,
   ArrowRight,
-  RefreshCw,
   Target,
   BarChart,
-  ListChecks
+  ListChecks,
+  ChevronLeft
 } from 'lucide-react';
 
 const commonProblems = [
@@ -93,57 +94,57 @@ export default function Home() {
   };
 
   const renderDashboard = () => (
-    <div className="container mx-auto p-4 sm:p-6 md:p-8">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <Logo className="h-8 w-8" />
-          <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent to-primary">
-            Your Action Plan
-          </h1>
+      <div className="container mx-auto p-4 sm:p-6 md:p-8">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-3">
+            <Logo className="h-8 w-8" />
+            <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent to-primary">
+              Your Action Plan
+            </h1>
+          </div>
+          <Button onClick={handleReset} variant="outline">
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            New Plan
+          </Button>
         </div>
-        <Button onClick={handleReset} variant="outline">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Start Over
-        </Button>
-      </div>
-      <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><ListChecks /> Recommended Solutions</CardTitle>
-              <CardDescription>
-                Actionable steps to address your business problems.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-4">
-                {result?.solutions.map((rec, index) => (
-                  <li key={index} className="flex items-start gap-4 p-4 bg-secondary rounded-md">
-                    <ArrowRight className="h-5 w-5 mt-1 text-primary shrink-0"/>
-                    <span className="text-sm">{rec}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-          <Card>
+        <div className="grid md:grid-cols-2 gap-6">
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Target /> Key Performance Indicators</CardTitle>
-                 <CardDescription>Metrics to track the success of your solutions.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><ListChecks /> Recommended Solutions</CardTitle>
+                <CardDescription>
+                  Actionable steps to address your business problems.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-4">
-                  {result?.kpis.map((kpi, index) => (
+                  {result?.solutions.map((rec, index) => (
                     <li key={index} className="flex items-start gap-4 p-4 bg-secondary rounded-md">
-                       <BarChart className="h-5 w-5 mt-1 text-primary shrink-0"/>
-                       <span className="text-sm">{kpi}</span>
+                      <ArrowRight className="h-5 w-5 mt-1 text-primary shrink-0"/>
+                      <span className="text-sm">{rec}</span>
                     </li>
                   ))}
                 </ul>
               </CardContent>
             </Card>
-          </div>
-    </div>
-  );
+            <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Target /> Key Performance Indicators</CardTitle>
+                   <CardDescription>Metrics to track the success of your solutions.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-4">
+                    {result?.kpis.map((kpi, index) => (
+                      <li key={index} className="flex items-start gap-4 p-4 bg-secondary rounded-md">
+                         <BarChart className="h-5 w-5 mt-1 text-primary shrink-0"/>
+                         <span className="text-sm">{kpi}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+      </div>
+    );
 
   const renderForm = () => (
     <div className="container mx-auto p-4 sm:p-6 md:p-8">
