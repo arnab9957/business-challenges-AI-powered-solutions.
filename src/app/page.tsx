@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -65,9 +65,17 @@ type AnalysisResult = {
   kpis: string[];
 };
 
+type KpiChartDataItem = {
+  name: string;
+  fullName: string;
+  current: number;
+  target: number;
+};
+
 export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [kpiChartData, setKpiChartData] = useState<KpiChartDataItem[]>([]);
   const { toast } = useToast();
 
   const { control, handleSubmit, watch } = useForm<FormData>({
@@ -85,6 +93,25 @@ export default function Home() {
   });
 
   const analysisType = watch('analysisType');
+
+  useEffect(() => {
+    if (result?.kpis) {
+      const data = result.kpis.map((kpi, index) => {
+        const match = kpi.match(/(\d+)%/);
+        const percentage = match ? parseInt(match[1], 10) : (Math.random() * 20 + 5);
+        const name = kpi.replace(/by \d+% in the next (quarter|year)/, '').trim();
+        const isIncrease = kpi.toLowerCase().includes('increase');
+        
+        return {
+          name: name.length > 30 ? `KPI ${index + 1}` : name,
+          fullName: name,
+          current: 100,
+          target: isIncrease ? 100 + percentage : 100 - percentage,
+        };
+      });
+      setKpiChartData(data);
+    }
+  }, [result?.kpis]);
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
@@ -132,25 +159,6 @@ export default function Home() {
   const handleReset = () => {
     setResult(null);
   };
-  
-  const kpiChartData = useMemo(() => {
-    if (!result?.kpis) return [];
-    
-    return result.kpis.map((kpi, index) => {
-      const match = kpi.match(/(\d+)%/);
-      const percentage = match ? parseInt(match[1], 10) : (Math.random() * 20 + 5);
-      const name = kpi.replace(/by \d+% in the next (quarter|year)/, '').trim();
-      
-      const isIncrease = kpi.toLowerCase().includes('increase');
-      
-      return {
-        name: name.length > 30 ? `KPI ${index + 1}` : name,
-        fullName: name,
-        current: 100,
-        target: isIncrease ? 100 + percentage : 100 - percentage,
-      };
-    });
-  }, [result?.kpis]);
 
   const renderDashboard = () => (
     <div className="container mx-auto p-4 sm:p-6 md:p-8">
