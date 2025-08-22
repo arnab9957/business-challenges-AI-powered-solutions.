@@ -31,7 +31,7 @@ const generateSolutionsFlow = ai.defineFlow(
     const pastFeedback = await retrieveFeedbackForAnalysis();
     
     const helpfulExamples = pastFeedback.filter(f => f.feedback === 'helpful');
-    const notHelpfulExamples = pastFeedback.filter(f => f.feedback === 'not_helpful');
+    const notHelpfulExamples = past-feedback.filter(f => f.feedback === 'not_helpful');
 
     const prompt = ai.definePrompt({
       name: 'generateSolutionsPrompt',
@@ -58,7 +58,7 @@ None specified.
 **Main Problem Described by User:**
 {{{customProblem}}}
 
-Based on all the information provided, generate a list of 3 to 5 specific, actionable solutions to address the stated problems. For each solution, also provide a corresponding Key Performance Indicator (KPI) to measure its success.
+Based on all the information provided, generate a list of 3 to 5 specific, actionable solutions to address the stated problems. For each solution, provide a short, catchy heading and a detailed description. For each solution, also provide a corresponding Key Performance Indicator (KPI) to measure its success.
 
 Focus on providing practical, realistic, and impactful advice tailored for SMEs.
 
@@ -86,7 +86,16 @@ You should learn from past examples of good and bad solutions based on user feed
 
 Example Output:
 {
-  "solutions": ["Develop a customer loyalty program to increase repeat business.", "Launch a targeted social media advertising campaign focusing on the 25-35 age demographic."],
+  "solutions": [
+    {
+      "heading": "Boost Repeat Business",
+      "description": "Develop a customer loyalty program with points and rewards to encourage repeat purchases."
+    },
+    {
+      "heading": "Targeted Social Media Ads",
+      "description": "Launch a targeted social media advertising campaign focusing on the 25-35 age demographic."
+    }
+  ],
   "kpis": ["Increase customer retention rate by 15% within 6 months.", "Achieve a 3:1 return on ad spend (ROAS) for the new social media campaign."]
 }
 `,

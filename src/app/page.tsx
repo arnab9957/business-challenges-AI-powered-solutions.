@@ -161,7 +161,10 @@ export default function Home() {
                     {result?.solutions.map((rec, index) => (
                       <li key={index} className="flex items-start gap-4 p-4 bg-secondary rounded-md">
                         <ArrowRight className="h-5 w-5 mt-1 text-primary shrink-0"/>
-                        <span className="text-sm">{rec}</span>
+                        <div>
+                           <h3 className="font-semibold mb-1">{rec.heading}</h3>
+                           <p className="text-sm text-muted-foreground">{rec.description}</p>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -171,7 +174,7 @@ export default function Home() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2"><Target /> Key Performance Indicators</CardTitle>
                      <CardDescription>Metrics to track the success of your solutions.</CardDescription>
-                  </CardHeader>
+                  </Header>
                   <CardContent>
                     <ul className="space-y-4">
                       {result?.kpis.map((kpi, index) => (
@@ -238,7 +241,7 @@ export default function Home() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2"><Lightbulb /> Common Problems</CardTitle>
                   <CardDescription>Select any common challenges your business is facing.</CardDescription>
-                </CardHeader>
+                </Header>
                 <CardContent>
                   <Controller
                     name="commonProblems"

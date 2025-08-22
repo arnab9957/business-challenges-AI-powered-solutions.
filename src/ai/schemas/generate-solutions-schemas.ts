@@ -16,8 +16,13 @@ export const GenerateSolutionsInputSchema = z.object({
 });
 export type GenerateSolutionsInput = z.infer<typeof GenerateSolutionsInputSchema>;
 
+const SolutionSchema = z.object({
+  heading: z.string().describe('A short, catchy heading for the solution.'),
+  description: z.string().describe('The detailed, actionable solution.'),
+});
+
 export const GenerateSolutionsOutputSchema = z.object({
-  solutions: z.array(z.string()).describe('A list of actionable solutions to the business problems.'),
+  solutions: z.array(SolutionSchema).describe('A list of actionable solutions to the business problems, each with a heading and description.'),
   kpis: z.array(z.string()).describe('A list of key performance indicators (KPIs) to track the success of the solutions.'),
 });
 export type GenerateSolutionsOutput = z.infer<typeof GenerateSolutionsOutputSchema>;
