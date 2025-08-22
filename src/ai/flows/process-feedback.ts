@@ -6,6 +6,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {z} from 'genkit';
 import {
   ProcessFeedbackInputSchema,
   type ProcessFeedbackInput,

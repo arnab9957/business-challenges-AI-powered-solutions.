@@ -54,7 +54,7 @@ export default function Home() {
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const { toast } = useToast();
 
-  const { control, handleSubmit, register, formState: { errors } } = useForm<FormData>({
+  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       businessContext: '',
@@ -171,7 +171,7 @@ export default function Home() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2"><Target /> Key Performance Indicators</CardTitle>
                      <CardDescription>Metrics to track the success of your solutions.</CardDescription>
-                  </Header>
+                  </CardHeader>
                   <CardContent>
                     <ul className="space-y-4">
                       {result?.kpis.map((kpi, index) => (
