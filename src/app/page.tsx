@@ -134,6 +134,7 @@ export default function Home() {
   return (
     <main className="min-h-screen w-full bg-gradient-to-br from-secondary via-background to-background">
       {isLoading && <Loader text="Generating your solutions..." />}
+      
       {result ? (
         <div className="container mx-auto p-4 sm:p-6 md:p-8">
           <div className="flex justify-between items-center mb-6">
