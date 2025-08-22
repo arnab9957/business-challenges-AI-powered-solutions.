@@ -21,10 +21,7 @@ export async function generateSolutions(input: GenerateSolutionsInput): Promise<
 
 const solutionsPrompt = ai.definePrompt({
       name: 'generateSolutionsPrompt',
-      input: {schema: z.object({
-        businessContext: z.string(),
-        commonProblems: z.array(z.string()),
-        customProblem: z.string(),
+      input: {schema: GenerateSolutionsInputSchema.extend({
         helpfulExamples: z.any(),
         notHelpfulExamples: z.any(),
       })},
