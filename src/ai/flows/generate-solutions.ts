@@ -22,7 +22,9 @@ export async function generateSolutions(input: GenerateSolutionsInput): Promise<
 const solutionsPrompt = ai.definePrompt({
       name: 'generateSolutionsPrompt',
       input: {schema: z.object({
-        input: GenerateSolutionsInputSchema,
+        businessContext: z.string(),
+        commonProblems: z.array(z.string()),
+        customProblem: z.string(),
         helpfulExamples: z.any(),
         notHelpfulExamples: z.any(),
       })},
@@ -32,12 +34,12 @@ const solutionsPrompt = ai.definePrompt({
 Analyze the following business information:
 
 **Business Context:**
-{{{input.businessContext}}}
+{{{businessContext}}}
 
 **Common Problems Identified:**
-{{#if input.commonProblems.length}}
+{{#if commonProblems.length}}
 <ul>
-  {{#each input.commonProblems}}
+  {{#each commonProblems}}
   <li>{{this}}</li>
   {{/each}}
 </ul>
@@ -46,7 +48,7 @@ None specified.
 {{/if}}
 
 **Main Problem Described by User:**
-{{{input.customProblem}}}
+{{{customProblem}}}
 
 Based on all the information provided, generate a list of 3 to 5 specific, actionable solutions to address the stated problems. For each solution, provide a short, catchy heading and a detailed description. For each solution, also provide a corresponding Key Performance Indicator (KPI) to measure its success.
 
@@ -99,14 +101,12 @@ const generateSolutionsFlow = ai.defineFlow(
     outputSchema: GenerateSolutionsOutputSchema,
   },
   async (input) => {
-
-    // Retrieve past feedback to improve the prompt
     const pastFeedback = await retrieveFeedbackForAnalysis();
     
     const helpfulExamples = pastFeedback.filter(f => f.feedback === 'helpful');
     const notHelpfulExamples = pastFeedback.filter(f => f.feedback === 'not_helpful');
-
-    const {output} = await solutionsPrompt({input, helpfulExamples, notHelpfulExamples});
+    
+    const {output} = await solutionsPrompt({ ...input, helpfulExamples, notHelpfulExamples });
     return output!;
   }
 );
