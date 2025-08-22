@@ -19,35 +19,25 @@ export async function generateSolutions(input: GenerateSolutionsInput): Promise<
   return generateSolutionsFlow(input);
 }
 
-const generateSolutionsFlow = ai.defineFlow(
-  {
-    name: 'generateSolutionsFlow',
-    inputSchema: GenerateSolutionsInputSchema,
-    outputSchema: GenerateSolutionsOutputSchema,
-  },
-  async (input) => {
-
-    // Retrieve past feedback to improve the prompt
-    const pastFeedback = await retrieveFeedbackForAnalysis();
-    
-    const helpfulExamples = pastFeedback.filter(f => f.feedback === 'helpful');
-    const notHelpfulExamples = past-feedback.filter(f => f.feedback === 'not_helpful');
-
-    const prompt = ai.definePrompt({
+const solutionsPrompt = ai.definePrompt({
       name: 'generateSolutionsPrompt',
-      input: {schema: GenerateSolutionsInputSchema},
+      input: {schema: z.object({
+        input: GenerateSolutionsInputSchema,
+        helpfulExamples: z.any(),
+        notHelpfulExamples: z.any(),
+      })},
       output: {schema: GenerateSolutionsOutputSchema},
       prompt: `You are an expert business consultant for Small and Medium-sized Enterprises (SMEs). Your goal is to provide actionable solutions and measurable KPIs for the user's business problems.
 
 Analyze the following business information:
 
 **Business Context:**
-{{{businessContext}}}
+{{{input.businessContext}}}
 
 **Common Problems Identified:**
-{{#if commonProblems.length}}
+{{#if input.commonProblems.length}}
 <ul>
-  {{#each commonProblems}}
+  {{#each input.commonProblems}}
   <li>{{this}}</li>
   {{/each}}
 </ul>
@@ -56,7 +46,7 @@ None specified.
 {{/if}}
 
 **Main Problem Described by User:**
-{{{customProblem}}}
+{{{input.customProblem}}}
 
 Based on all the information provided, generate a list of 3 to 5 specific, actionable solutions to address the stated problems. For each solution, provide a short, catchy heading and a detailed description. For each solution, also provide a corresponding Key Performance Indicator (KPI) to measure its success.
 
@@ -70,7 +60,7 @@ You should learn from past examples of good and bad solutions based on user feed
 **Examples of HELPFUL solutions (DO MORE OF THIS):**
 {{#each helpfulExamples}}
 - **Problem:** {{this.input.customProblem}}
-  - **Solution:** {{this.output.solutions}}
+  - **Solution:** {{this.output}}
 {{/each}}
 {{/if}}
 
@@ -78,7 +68,7 @@ You should learn from past examples of good and bad solutions based on user feed
 **Examples of NOT HELPFUL solutions (AVOID THIS):**
 {{#each notHelpfulExamples}}
 - **Problem:** {{this.input.customProblem}}
-  - **Solution:** {{this.output.solutions}}
+  - **Solution:** {{this.output}}
   - **Reasoning:** These were considered not helpful. Try to provide more specific, actionable, and creative advice. Avoid generic or obvious suggestions.
 {{/each}}
 {{/if}}
@@ -101,7 +91,22 @@ Example Output:
 `,
     });
 
-    const {output} = await prompt({...input, helpfulExamples, notHelpfulExamples});
+
+const generateSolutionsFlow = ai.defineFlow(
+  {
+    name: 'generateSolutionsFlow',
+    inputSchema: GenerateSolutionsInputSchema,
+    outputSchema: GenerateSolutionsOutputSchema,
+  },
+  async (input) => {
+
+    // Retrieve past feedback to improve the prompt
+    const pastFeedback = await retrieveFeedbackForAnalysis();
+    
+    const helpfulExamples = pastFeedback.filter(f => f.feedback === 'helpful');
+    const notHelpfulExamples = pastFeedback.filter(f => f.feedback === 'not_helpful');
+
+    const {output} = await solutionsPrompt({input, helpfulExamples, notHelpfulExamples});
     return output!;
   }
 );
