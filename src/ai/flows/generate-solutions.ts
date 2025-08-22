@@ -6,7 +6,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 import {
   GenerateSolutionsInputSchema,
   type GenerateSolutionsInput,
@@ -36,15 +36,11 @@ Analyze the following business information:
 **Business Context:**
 {{{businessContext}}}
 
-**Common Problems Identified:**
 {{#if commonProblems.length}}
-<ul>
-  {{#each commonProblems}}
-  <li>{{this}}</li>
-  {{/each}}
-</ul>
-{{else}}
-None specified.
+**Common Problems Identified:**
+{{#each commonProblems}}
+- {{this}}
+{{/each}}
 {{/if}}
 
 **Main Problem Described by User:**
