@@ -175,7 +175,7 @@ export default function Home() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2"><Target /> Key Performance Indicators</CardTitle>
                      <CardDescription>Metrics to track the success of your solutions.</CardDescription>
-                  </Header>
+                  </CardHeader>
                   <CardContent>
                     <ul className="space-y-4">
                       {result?.kpis.map((kpi, index) => (
@@ -242,7 +242,7 @@ export default function Home() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2"><Lightbulb /> Common Problems</CardTitle>
                   <CardDescription>Select any common challenges your business is facing.</CardDescription>
-                </Header>
+                </CardHeader>
                 <CardContent>
                   <Controller
                     name="commonProblems"
