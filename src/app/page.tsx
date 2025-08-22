@@ -132,7 +132,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-950 to-background">
+    <main className="min-h-screen w-full bg-gradient-to-br from-orange-950/20 via-background to-background">
       {isLoading && <Loader text="Generating your solutions..." />}
       
       {result ? (
@@ -140,7 +140,7 @@ export default function Home() {
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-3">
               <Logo className="h-8 w-8" />
-              <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+              <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
                 Your Action Plan
               </h1>
             </div>
@@ -212,7 +212,7 @@ export default function Home() {
             <div className="text-center mb-8">
               <div className="flex justify-center items-center gap-4 mb-4">
                 <Logo className="h-12 w-12" />
-                <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+                <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
                   SME Insights Navigator
                 </h1>
               </div>
@@ -295,7 +295,7 @@ export default function Home() {
               </Card>
 
               <div className="flex justify-end">
-                <Button type="submit" size="lg" className="bg-gradient-to-r from-green-500 to-blue-600 text-primary-foreground font-bold text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-shadow duration-300" disabled={isLoading}>
+                <Button type="submit" size="lg" className="bg-gradient-to-r from-yellow-500 to-orange-600 text-primary-foreground font-bold text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-shadow duration-300" disabled={isLoading}>
                   Generate Solutions
                   <ArrowRight className="ml-2 h-5 w-5"/>
                 </Button>
