@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow for generating business solutions based on user-provided problems.
@@ -26,7 +27,7 @@ const solutionsPrompt = ai.definePrompt({
         notHelpfulExamples: z.any(),
       })},
       output: {schema: GenerateSolutionsOutputSchema},
-      prompt: `You are an expert business consultant for Small and Medium-sized Enterprises (SMEs). Your goal is to provide actionable solutions and measurable KPIs for the user's business problems.
+      prompt: `You are an expert business consultant and innovation strategist for Small and Medium-sized Enterprises (SMEs). Your goal is to provide actionable solutions and measurable KPIs for the user's business problems.
 
 Analyze the following business information:
 
@@ -57,8 +58,7 @@ Based on all the information provided, generate the following:
     *   **Customer Satisfaction:** The potential to improve customer happiness and loyalty.
     The 'name' in the graph data object must exactly match the solution's 'heading'.
 
-
-Focus on providing practical, realistic, and impactful advice tailored for SMEs.
+**Your Core Task:** Provide practical, realistic, and impactful advice tailored for SMEs. Crucially, aim for innovative, 'out-of-the-box' thinking that goes beyond generic advice. The solutions should be creative and inspiring, encouraging the user to explore new possibilities, yet still be relevant and actionable within their specific business context.
 
 ---
 **LEARNING FROM PAST FEEDBACK:**
