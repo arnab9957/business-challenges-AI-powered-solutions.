@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,9 +10,9 @@ import { processFeedback } from '@/ai/flows/process-feedback';
 import type { GenerateSolutionsInput, GenerateSolutionsOutput } from '@/ai/schemas/generate-solutions-schemas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader } from '@/components/loader';
 import { Logo } from '@/components/icons/logo';
@@ -27,6 +27,7 @@ import {
   ChevronLeft,
   ThumbsUp,
   ThumbsDown,
+  Search,
 } from 'lucide-react';
 
 const commonProblems = [
@@ -36,6 +37,10 @@ const commonProblems = [
   { id: 'customer_retention', label: 'Poor Customer Retention' },
   { id: 'employee_turnover', label: 'High Employee Turnover' },
   { id: 'supply_chain', label: 'Supply Chain Issues' },
+  { id: 'cash_flow', label: 'Cash Flow Problems' },
+  { id: 'competition', label: 'Intense Competition' },
+  { id: 'technology', label: 'Outdated Technology' },
+  { id: 'brand_awareness', label: 'Lack of Brand Awareness' },
 ] as const;
 
 const formSchema = z.object({
@@ -52,6 +57,7 @@ export default function Home() {
   const [result, setResult] = useState<GenerateSolutionsOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [problemSearch, setProblemSearch] = useState('');
   const { toast } = useToast();
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
@@ -62,6 +68,13 @@ export default function Home() {
       customProblem: '',
     },
   });
+
+  const filteredProblems = useMemo(() => {
+    if (!problemSearch) return commonProblems;
+    return commonProblems.filter(p =>
+      p.label.toLowerCase().includes(problemSearch.toLowerCase())
+    );
+  }, [problemSearch]);
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
@@ -241,37 +254,52 @@ export default function Home() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2"><Lightbulb /> Common Problems</CardTitle>
-                  <CardDescription>Select any common challenges your business is facing.</CardDescription>
+                  <CardDescription>Select any common challenges your business is facing. You can search for problems too.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search problems..."
+                      value={problemSearch}
+                      onChange={(e) => setProblemSearch(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                   <Controller
                     name="commonProblems"
                     control={control}
                     render={({ field }) => (
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {commonProblems.map((problem) => (
-                          <div key={problem.id} className="flex items-start space-x-2 p-2 rounded-md hover:bg-secondary cursor-pointer">
-                            <Checkbox
-                              id={problem.id}
-                              checked={field.value?.includes(problem.id)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...(field.value || []), problem.id])
-                                  : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== problem.id
-                                      )
-                                    );
+                      <div className="flex flex-wrap gap-2">
+                        {filteredProblems.map((problem) => {
+                          const isSelected = field.value?.includes(problem.id);
+                          return (
+                            <div
+                              key={problem.id}
+                              onClick={() => {
+                                const newValue = isSelected
+                                  ? field.value?.filter((id) => id !== problem.id)
+                                  : [...(field.value || []), problem.id];
+                                field.onChange(newValue);
                               }}
-                            />
-                            <Label htmlFor={problem.id} className="font-normal cursor-pointer -translate-y-0.5">
+                              className={`px-3 py-1.5 rounded-full cursor-pointer transition-colors text-sm ${
+                                isSelected
+                                  ? 'bg-primary text-primary-foreground font-semibold'
+                                  : 'bg-secondary hover:bg-secondary/80'
+                              }`}
+                            >
                               {problem.label}
-                            </Label>
-                          </div>
-                        ))}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   />
+                   {filteredProblems.length === 0 && (
+                      <p className="text-muted-foreground text-sm text-center mt-4">
+                        No problems found.
+                      </p>
+                    )}
                 </CardContent>
               </Card>
               
@@ -310,5 +338,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
