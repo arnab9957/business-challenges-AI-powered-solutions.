@@ -295,7 +295,7 @@ export default function Home() {
               </Card>
 
               <div className="flex justify-end">
-                <Button type="submit" size="lg" className="bg-gradient-to-r from-yellow-500 to-orange-600 text-primary-foreground font-bold text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-shadow duration-300" disabled={isLoading}>
+                <Button type="submit" size="lg" className="bg-gradient-to-r from-yellow-500 to-orange-600 text-primary-foreground font-bold text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:animate-none animate-pulse-slow" disabled={isLoading}>
                   Generate Solutions
                   <ArrowRight className="ml-2 h-5 w-5"/>
                 </Button>
@@ -307,3 +307,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
