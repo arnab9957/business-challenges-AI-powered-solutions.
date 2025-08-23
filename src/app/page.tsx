@@ -326,9 +326,9 @@ export default function Home() {
                             <XAxis dataKey="value" type="number" hide />
                             <Tooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
                             <Legend />
-                            <Bar dataKey="revenueGrowth" stackId="a" fill="var(--color-revenueGrowth)" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="revenueGrowth" stackId="a" fill="var(--color-revenueGrowth)" radius={[4, 0, 0, 4]} />
                             <Bar dataKey="costReduction" stackId="a" fill="var(--color-costReduction)" />
-                            <Bar dataKey="customerSatisfaction" stackId="a" fill="var(--color-customerSatisfaction)" radius={[4, 0, 0, 4]} />
+                            <Bar dataKey="customerSatisfaction" stackId="a" fill="var(--color-customerSatisfaction)" radius={[0, 4, 4, 0]} />
                           </BarChart>
                         </ChartContainer>
                     </CardContent>
