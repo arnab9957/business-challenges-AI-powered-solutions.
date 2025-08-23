@@ -9,7 +9,7 @@ import { generateSolutions } from '@/ai/flows/generate-solutions';
 import { processFeedback } from '@/ai/flows/process-feedback';
 import type { GenerateSolutionsInput, GenerateSolutionsOutput } from '@/ai/schemas/generate-solutions-schemas';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -48,13 +48,14 @@ type FormData = z.infer<typeof formSchema>;
 
 
 export default function Home() {
+  const [currentStep, setCurrentStep] = useState(1);
   const [lastInput, setLastInput] = useState<GenerateSolutionsInput | null>(null);
   const [result, setResult] = useState<GenerateSolutionsOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const { toast } = useToast();
 
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { control, handleSubmit, trigger, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       businessContext: '',
@@ -103,6 +104,7 @@ export default function Home() {
     setResult(null);
     setLastInput(null);
     setFeedbackSubmitted(false);
+    setCurrentStep(1);
   };
   
   const handleFeedback = async (feedback: 'helpful' | 'not_helpful') => {
@@ -128,6 +130,23 @@ export default function Home() {
         description: 'Could not submit feedback. Please try again.',
       });
       setFeedbackSubmitted(false);
+    }
+  };
+
+  const nextStep = async () => {
+    let isValid = true;
+    if (currentStep === 3) {
+        isValid = await trigger("customProblem");
+    }
+    
+    if (isValid && currentStep < 3) {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
     }
   };
 
@@ -208,7 +227,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="container mx-auto p-4 sm:p-6 md:p-8">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-2xl mx-auto">
             <div className="text-center mb-8">
               <div className="flex justify-center items-center gap-4 mb-4">
                 <Logo className="h-12 w-12" />
@@ -222,87 +241,108 @@ export default function Home() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Briefcase /> Business Context</CardTitle>
-                  <CardDescription>Provide some background about your company. (Optional)</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Controller
-                      name="businessContext"
-                      control={control}
-                      render={({ field }) => (
-                        <Textarea {...field} placeholder="e.g., We are a small e-commerce business selling handmade jewelry. Our revenue has been flat for the last 6 months." className="h-24" />
-                      )}
-                    />
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Lightbulb /> Common Problems</CardTitle>
-                  <CardDescription>Select any common challenges your business is facing.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Controller
-                    name="commonProblems"
-                    control={control}
-                    render={({ field }) => (
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {commonProblems.map((problem) => (
-                          <div key={problem.id} className="flex items-start space-x-2">
-                            <Checkbox
-                              id={problem.id}
-                              checked={field.value?.includes(problem.id)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...(field.value || []), problem.id])
-                                  : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== problem.id
-                                      )
-                                    );
-                              }}
+                {currentStep === 1 && (
+                    <Card>
+                        <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Briefcase /> Step 1: Business Context</CardTitle>
+                        <CardDescription>Provide some background about your company. (Optional)</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Controller
+                            name="businessContext"
+                            control={control}
+                            render={({ field }) => (
+                                <Textarea {...field} placeholder="e.g., We are a small e-commerce business selling handmade jewelry. Our revenue has been flat for the last 6 months." className="h-40" />
+                            )}
                             />
-                            <Label htmlFor={problem.id} className="font-normal cursor-pointer -translate-y-0.5">
-                              {problem.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  />
-                </CardContent>
-              </Card>
+                        </CardContent>
+                        <CardFooter className="flex justify-end">
+                            <Button type="button" onClick={nextStep}>
+                                Next <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><MessageSquareText /> Describe Your Main Problem</CardTitle>
-                  <CardDescription>In your own words, what is the single biggest challenge you want to solve?</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Controller
-                    name="customProblem"
-                    control={control}
-                    render={({ field }) => (
-                      <>
-                        <Textarea {...field} placeholder="Describe your primary goal, main operational issue, key market concern, etc." className="h-32" />
-                        {errors.customProblem && <p className="text-sm text-destructive mt-2">{errors.customProblem.message}</p>}
-                      </>
-                    )}
-                  />
-                </CardContent>
-              </Card>
+                {currentStep === 2 && (
+                    <Card>
+                        <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Lightbulb /> Step 2: Common Problems</CardTitle>
+                        <CardDescription>Select any common challenges your business is facing.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Controller
+                                name="commonProblems"
+                                control={control}
+                                render={({ field }) => (
+                                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {commonProblems.map((problem) => (
+                                    <div key={problem.id} className="flex items-start space-x-2 p-2 rounded-md hover:bg-secondary cursor-pointer">
+                                        <Checkbox
+                                        id={problem.id}
+                                        checked={field.value?.includes(problem.id)}
+                                        onCheckedChange={(checked) => {
+                                            return checked
+                                            ? field.onChange([...(field.value || []), problem.id])
+                                            : field.onChange(
+                                                field.value?.filter(
+                                                    (value) => value !== problem.id
+                                                )
+                                                );
+                                        }}
+                                        />
+                                        <Label htmlFor={problem.id} className="font-normal cursor-pointer -translate-y-0.5">
+                                        {problem.label}
+                                        </Label>
+                                    </div>
+                                    ))}
+                                </div>
+                                )}
+                            />
+                        </CardContent>
+                        <CardFooter className="flex justify-between">
+                            <Button type="button" variant="outline" onClick={prevStep}>
+                                <ChevronLeft className="mr-2 h-4 w-4" /> Back
+                            </Button>
+                            <Button type="button" onClick={nextStep}>
+                                Next <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                )}
 
-              <div className="flex justify-end">
-                <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-glow"></div>
-                     <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading}>
-                        Generate Solutions
-                        <ArrowRight className="ml-2 h-5 w-5"/>
-                    </Button>
-                </div>
-              </div>
+                {currentStep === 3 && (
+                    <Card>
+                        <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><MessageSquareText /> Step 3: Describe Your Main Problem</CardTitle>
+                        <CardDescription>In your own words, what is the single biggest challenge you want to solve?</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                        <Controller
+                            name="customProblem"
+                            control={control}
+                            render={({ field }) => (
+                            <>
+                                <Textarea {...field} placeholder="Describe your primary goal, main operational issue, key market concern, etc." className="h-40" />
+                                {errors.customProblem && <p className="text-sm text-destructive mt-2">{errors.customProblem.message}</p>}
+                            </>
+                            )}
+                        />
+                        </CardContent>
+                         <CardFooter className="flex justify-between">
+                            <Button type="button" variant="outline" onClick={prevStep}>
+                                <ChevronLeft className="mr-2 h-4 w-4" /> Back
+                            </Button>
+                            <div className="relative group">
+                                <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-glow"></div>
+                                <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading}>
+                                    Generate Solutions
+                                    <ArrowRight className="ml-2 h-5 w-5"/>
+                                </Button>
+                            </div>
+                        </CardFooter>
+                    </Card>
+                )}
             </form>
           </div>
         </div>
@@ -310,4 +350,3 @@ export default function Home() {
     </main>
   );
 }
-    
