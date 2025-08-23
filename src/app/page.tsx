@@ -34,6 +34,7 @@ import {
   FileText,
   Tags,
   CheckCircle,
+  ChevronDown,
 } from 'lucide-react';
 
 const commonProblems = [
@@ -148,6 +149,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [problemSearch, setProblemSearch] = useState('');
+  const [showAllProblems, setShowAllProblems] = useState(false);
   const { toast } = useToast();
 
   const { control, handleSubmit, formState: { errors }, setValue } = useForm<FormData>({
@@ -165,6 +167,14 @@ export default function Home() {
       p.label.toLowerCase().includes(problemSearch.toLowerCase())
     );
   }, [problemSearch]);
+  
+  const problemsToShow = useMemo(() => {
+      if (showAllProblems || problemSearch) {
+          return filteredProblems;
+      }
+      return filteredProblems.slice(0, 7);
+  }, [filteredProblems, showAllProblems, problemSearch]);
+
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
@@ -361,7 +371,7 @@ export default function Home() {
                         control={control}
                         render={({ field }) => (
                           <div className="flex flex-wrap gap-2">
-                            {filteredProblems.map((problem) => {
+                            {problemsToShow.map((problem) => {
                               const isSelected = field.value?.includes(problem.id);
                               return (
                                 <div
@@ -389,6 +399,18 @@ export default function Home() {
                           <p className="text-muted-foreground text-sm text-center mt-4">
                             No problems found.
                           </p>
+                        )}
+                         {!problemSearch && filteredProblems.length > 7 && (
+                          <div className="text-center mt-4">
+                            <Button
+                              type="button"
+                              variant="link"
+                              onClick={() => setShowAllProblems(!showAllProblems)}
+                            >
+                              {showAllProblems ? 'Show less' : 'Show all'}
+                               <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showAllProblems ? 'rotate-180' : ''}`} />
+                            </Button>
+                          </div>
                         )}
                     </CardContent>
                   </Card>
