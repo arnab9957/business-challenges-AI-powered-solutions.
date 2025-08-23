@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Loader } from '@/components/loader';
 import { Logo } from '@/components/icons/logo';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart as BarChartIcon, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import {
   Lightbulb,
@@ -306,7 +306,7 @@ export default function Home() {
                     <ul className="space-y-4">
                       {result?.kpis.map((kpi, index) => (
                         <li key={index} className="flex items-start gap-4 p-4 bg-secondary rounded-md">
-                           <BarChart className="h-5 w-5 mt-1 text-primary shrink-0"/>
+                           <BarChartIcon className="h-5 w-5 mt-1 text-primary shrink-0"/>
                            <span className="text-sm">{kpi}</span>
                         </li>
                       ))}
@@ -320,15 +320,15 @@ export default function Home() {
                     </CardHeader>
                     <CardContent>
                         <ChartContainer config={chartConfig} className="h-64 w-full">
-                          <BarChart data={result.graphData} layout="vertical" margin={{ left: 50, top: 20, right: 20, bottom: 20 }}>
+                          <BarChart data={result.graphData} layout="vertical" margin={{ left: 120, top: 20, right: 20, bottom: 20 }}>
                             <CartesianGrid horizontal={false} />
-                            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} className="text-xs" />
-                            <XAxis dataKey="value" type="number" hide />
+                            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} className="text-xs truncate" />
+                            <XAxis type="number" hide />
                             <Tooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
                             <Legend />
-                            <Bar dataKey="revenueGrowth" stackId="a" fill="var(--color-revenueGrowth)" radius={[4, 0, 0, 4]} />
-                            <Bar dataKey="costReduction" stackId="a" fill="var(--color-costReduction)" />
-                            <Bar dataKey="customerSatisfaction" stackId="a" fill="var(--color-customerSatisfaction)" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="revenueGrowth" stackId="a" fill={chartConfig.revenueGrowth.color} radius={[4, 0, 0, 4]} />
+                            <Bar dataKey="costReduction" stackId="a" fill={chartConfig.costReduction.color} />
+                            <Bar dataKey="customerSatisfaction" stackId="a" fill={chartConfig.customerSatisfaction.color} radius={[0, 4, 4, 0]} />
                           </BarChart>
                         </ChartContainer>
                     </CardContent>
@@ -398,7 +398,6 @@ export default function Home() {
                           value={problemSearch}
                           onChange={(e) => setProblemSearch(e.target.value)}
                           className="pl-10"
-                          suppressHydrationWarning
                         />
                       </div>
                       <Controller
@@ -441,7 +440,6 @@ export default function Home() {
                               type="button"
                               variant="link"
                               onClick={() => setShowAllProblems(!showAllProblems)}
-                              suppressHydrationWarning
                             >
                               {showAllProblems ? 'Show less' : 'Show all'}
                                <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showAllProblems ? 'rotate-180' : ''}`} />
@@ -473,7 +471,7 @@ export default function Home() {
                   <div className="flex justify-end">
                     <div className="relative group">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-glow"></div>
-                         <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading} suppressHydrationWarning>
+                         <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading}>
                             Generate Solutions
                             <ArrowRight className="ml-2 h-5 w-5"/>
                         </Button>
