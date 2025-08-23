@@ -18,13 +18,14 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Loader } from '@/components/loader';
 import { Logo } from '@/components/icons/logo';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import {
   Lightbulb,
   Briefcase,
   MessageSquareText,
   ArrowRight,
   Target,
-  BarChart,
   ListChecks,
   ChevronLeft,
   ThumbsUp,
@@ -35,6 +36,7 @@ import {
   Tags,
   CheckCircle,
   ChevronDown,
+  LineChart,
 } from 'lucide-react';
 
 const commonProblems = [
@@ -194,7 +196,7 @@ export default function Home() {
       setLastInput(input);
       const response = await generateSolutions(input);
 
-      if (!response || !response.solutions || !response.kpis) {
+      if (!response || !response.solutions || !response.kpis || !response.graphData) {
         throw new Error('Failed to generate a valid response from AI.');
       }
       
@@ -244,6 +246,12 @@ export default function Home() {
     }
   };
 
+  const chartConfig = {
+      revenueGrowth: { label: "Revenue Growth", color: "hsl(var(--chart-1))" },
+      costReduction: { label: "Cost Reduction", color: "hsl(var(--chart-2))" },
+      customerSatisfaction: { label: "Customer Satisfaction", color: "hsl(var(--chart-4))" },
+  };
+
   return (
     <main className="min-h-screen w-full bg-gradient-to-br from-orange-950/20 via-background to-background">
       {isLoading && <Loader text="Generating your solutions..." />}
@@ -262,7 +270,7 @@ export default function Home() {
               New Plan
             </Button>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2"><ListChecks /> Recommended Solutions</CardTitle>
@@ -271,20 +279,25 @@ export default function Home() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-4">
+                  <div className="space-y-6">
                     {result?.solutions.map((rec, index) => (
-                      <li key={index} className="flex items-start gap-4 p-4 bg-secondary rounded-md">
+                      <div key={index} className="flex items-start gap-4 p-4 bg-secondary rounded-md">
                         <ArrowRight className="h-5 w-5 mt-1 text-primary shrink-0"/>
                         <div>
-                           <h3 className="font-semibold mb-1">{rec.heading}</h3>
-                           <p className="text-sm text-muted-foreground">{rec.description}</p>
+                           <h3 className="font-semibold mb-2">{rec.heading}</h3>
+                           <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                            {rec.description.map((point, i) => (
+                                <li key={i}>{point}</li>
+                            ))}
+                           </ul>
                         </div>
-                      </li>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </CardContent>
               </Card>
-              <Card>
+              <div className="grid md:grid-cols-2 gap-6">
+                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2"><Target /> Key Performance Indicators</CardTitle>
                      <CardDescription>Metrics to track the success of your solutions.</CardDescription>
@@ -300,7 +313,28 @@ export default function Home() {
                     </ul>
                   </CardContent>
                 </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><LineChart /> Potential Impact Analysis</CardTitle>
+                        <CardDescription>Estimated impact of each solution across key areas.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ChartContainer config={chartConfig} className="h-64 w-full">
+                          <BarChart data={result.graphData} layout="vertical" margin={{ left: 50, top: 20, right: 20, bottom: 20 }}>
+                            <CartesianGrid horizontal={false} />
+                            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} className="text-xs" />
+                            <XAxis dataKey="value" type="number" hide />
+                            <Tooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
+                            <Legend />
+                            <Bar dataKey="revenueGrowth" stackId="a" fill="var(--color-revenueGrowth)" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="costReduction" stackId="a" fill="var(--color-costReduction)" />
+                            <Bar dataKey="customerSatisfaction" stackId="a" fill="var(--color-customerSatisfaction)" radius={[4, 0, 0, 4]} />
+                          </BarChart>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
               </div>
+            </div>
                <div className="mt-8 text-center">
             {!feedbackSubmitted ? (
               <>
@@ -364,6 +398,7 @@ export default function Home() {
                           value={problemSearch}
                           onChange={(e) => setProblemSearch(e.target.value)}
                           className="pl-10"
+                          suppressHydrationWarning
                         />
                       </div>
                       <Controller
@@ -406,6 +441,7 @@ export default function Home() {
                               type="button"
                               variant="link"
                               onClick={() => setShowAllProblems(!showAllProblems)}
+                              suppressHydrationWarning
                             >
                               {showAllProblems ? 'Show less' : 'Show all'}
                                <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showAllProblems ? 'rotate-180' : ''}`} />
@@ -437,7 +473,7 @@ export default function Home() {
                   <div className="flex justify-end">
                     <div className="relative group">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-glow"></div>
-                         <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading}>
+                         <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading} suppressHydrationWarning>
                             Generate Solutions
                             <ArrowRight className="ml-2 h-5 w-5"/>
                         </Button>
