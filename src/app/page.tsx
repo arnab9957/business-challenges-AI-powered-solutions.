@@ -47,6 +47,16 @@ const commonProblems = [
   { id: 'competition', label: 'Intense Competition' },
   { id: 'technology', label: 'Outdated Technology' },
   { id: 'brand_awareness', label: 'Lack of Brand Awareness' },
+  { id: 'cybersecurity_threats', label: 'Cybersecurity Threats' },
+  { id: 'slow_digital_adoption', label: 'Slow Digital Adoption' },
+  { id: 'legacy_systems', label: 'Legacy Systems Holding Back Efficiency' },
+  { id: 'data_driven_decision_making', label: 'Lack of Data-Driven Decision Making' },
+  { id: 'integration_issues', label: 'Integration Issues Across Tools/Platforms' },
+  { id: 'customer_acquisition_costs', label: 'Customer Acquisition Costs Too High' },
+  { id: 'weak_online_presence', label: 'Weak Online Presence' },
+  { id: 'market_reach_barriers', label: 'Limited Market Reach / Expansion Barriers' },
+  { id: 'product_differentiation', label: 'Poor Product Differentiation' },
+  { id: 'declining_customer_loyalty', label: 'Declining Customer Loyalty' },
 ] as const;
 
 const formSchema = z.object({
