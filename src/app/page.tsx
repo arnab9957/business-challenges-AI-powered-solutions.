@@ -295,10 +295,13 @@ export default function Home() {
               </Card>
 
               <div className="flex justify-end">
-                 <Button type="submit" size="lg" className="bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 text-primary-foreground font-bold text-lg" disabled={isLoading}>
-                    Generate Solutions
-                    <ArrowRight className="ml-2 h-5 w-5"/>
-                </Button>
+                <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-glow"></div>
+                     <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading}>
+                        Generate Solutions
+                        <ArrowRight className="ml-2 h-5 w-5"/>
+                    </Button>
+                </div>
               </div>
             </form>
           </div>
@@ -307,3 +310,4 @@ export default function Home() {
     </main>
   );
 }
+    
