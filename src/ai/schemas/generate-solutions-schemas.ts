@@ -22,17 +22,24 @@ const SolutionSchema = z.object({
   description: z.array(z.string()).describe('The detailed, actionable solution, broken down into a list of bullet points.'),
 });
 
-const GraphDataSchema = z.object({
-    name: z.string().describe('The name of the solution. Should match one of the solution headings.'),
-    revenueGrowth: z.number().min(0).max(100).describe('A score from 0-100 representing the potential impact on revenue growth.'),
-    costReduction: z.number().min(0).max(100).describe('A score from 0-100 representing the potential impact on cost reduction.'),
-    customerSatisfaction: z.number().min(0).max(100).describe('A score from 0-100 representing the potential impact on customer satisfaction.'),
+const ImpactAnalysisSchema = z.object({
+    name: z.string().describe("The name of the solution. Should match one of the solution headings."),
+    projectedImpact: z.number().min(0).max(100).describe("The AI's best estimate of the overall potential impact of the solution (0-100)."),
+    confidenceInterval: z.array(z.number()).length(2).describe("An array representing the confidence interval [worstCase, bestCase] for the projected impact."),
+    stakeholderValueDistribution: z.object({
+        Customers: z.number().describe("Value score for Customers."),
+        Business: z.number().describe("Value score for the Business."),
+        Employees: z.number().describe("Value score for Employees."),
+        Community: z.number().describe("Value score for the Community."),
+    }).describe("A breakdown of how the generated value is distributed among key stakeholders.")
 });
 
 
 export const GenerateSolutionsOutputSchema = z.object({
   solutions: z.array(SolutionSchema).describe('A list of actionable solutions to the business problems, each with a heading and description.'),
   kpis: z.array(z.string()).describe('A list of key performance indicators (KPIs) to track the success of the solutions.'),
-  graphData: z.array(GraphDataSchema).describe('Data for visualizing the potential impact of each solution across key business areas.')
+  impactAnalysis: z.array(ImpactAnalysisSchema).describe('Data for visualizing the potential impact of each solution across key business areas.'),
+  dataNarrative: z.string().describe("A short, compelling story that explains the 'why' behind the data for the primary solution, guiding the user through their potential transformation journey.")
 });
 export type GenerateSolutionsOutput = z.infer<typeof GenerateSolutionsOutputSchema>;
+

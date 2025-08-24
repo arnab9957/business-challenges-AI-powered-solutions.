@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Loader } from '@/components/loader';
 import { Logo } from '@/components/icons/logo';
-import { BarChart as BarChartIcon, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart } from 'recharts';
+import { BarChart as BarChartIcon, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Area, PieChart, Pie, Cell, Sector } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import {
   Lightbulb,
@@ -38,6 +38,7 @@ import {
   ChevronDown,
   LineChart,
   Building,
+  Users,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -168,6 +169,52 @@ function LivePreview({ control, setValue }: { control: any, setValue: any }) {
     );
 }
 
+const renderActiveShape = (props: any) => {
+  const RADIAN = Math.PI / 180;
+  const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+  const sin = Math.sin(-RADIAN * midAngle);
+  const cos = Math.cos(-RADIAN * midAngle);
+  const sx = cx + (outerRadius + 10) * cos;
+  const sy = cy + (outerRadius + 10) * sin;
+  const mx = cx + (outerRadius + 30) * cos;
+  const my = cy + (outerRadius + 30) * sin;
+  const ex = mx + (cos >= 0 ? 1 : -1) * 22;
+  const ey = my;
+  const textAnchor = cos >= 0 ? 'start' : 'end';
+
+  return (
+    <g>
+      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} className="font-bold">
+        {payload.name}
+      </text>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+      <Sector
+        cx={cx}
+        cy={cy}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        innerRadius={outerRadius + 6}
+        outerRadius={outerRadius + 10}
+        fill={fill}
+      />
+      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
+      <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
+      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="hsl(var(--foreground))">{`${value}`}</text>
+      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="hsl(var(--muted-foreground))">
+        {`(${(percent * 100).toFixed(2)}%)`}
+      </text>
+    </g>
+  );
+};
+
 
 export default function Home() {
   const [lastInput, setLastInput] = useState<GenerateSolutionsInput | null>(null);
@@ -176,6 +223,8 @@ export default function Home() {
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [problemSearch, setProblemSearch] = useState('');
   const [showAllProblems, setShowAllProblems] = useState(false);
+  const [activeDonutIndex, setActiveDonutIndex] = useState(0);
+  const [activeSolutionIndex, setActiveSolutionIndex] = useState(0);
   const { toast } = useToast();
 
   const { control, handleSubmit, formState: { errors }, setValue } = useForm<FormData>({
@@ -222,11 +271,12 @@ export default function Home() {
       setLastInput(input);
       const response = await generateSolutions(input);
 
-      if (!response || !response.solutions || !response.kpis || !response.graphData) {
+      if (!response || !response.solutions || !response.kpis || !response.impactAnalysis) {
         throw new Error('Failed to generate a valid response from AI.');
       }
       
       setResult(response);
+      setActiveSolutionIndex(0);
 
     } catch (error) {
       console.error(error);
@@ -271,12 +321,38 @@ export default function Home() {
       setFeedbackSubmitted(false);
     }
   };
+  
+  const donutData = useMemo(() => {
+      if (!result || !result.impactAnalysis[activeSolutionIndex]) return [];
+      const distribution = result.impactAnalysis[activeSolutionIndex].stakeholderValueDistribution;
+      return Object.entries(distribution).map(([name, value]) => ({ name, value }));
+  }, [result, activeSolutionIndex]);
+
+  const onPieEnter = (_: any, index: number) => {
+    setActiveDonutIndex(index);
+  };
+  
+  const handleBarClick = (data: any) => {
+      if(data && data.activePayload && data.activePayload[0]) {
+          const solutionName = data.activePayload[0].payload.name;
+          const index = result?.impactAnalysis.findIndex(s => s.name === solutionName);
+          if(index !== -1 && index !== undefined) {
+              setActiveSolutionIndex(index);
+          }
+      }
+  }
 
   const chartConfig = {
-      revenueGrowth: { label: "Revenue Growth", color: "hsl(var(--chart-1))" },
-      costReduction: { label: "Cost Reduction", color: "hsl(var(--chart-2))" },
-      customerSatisfaction: { label: "Customer Satisfaction", color: "hsl(var(--chart-4))" },
+      projectedImpact: { label: "Projected Impact", color: "hsl(var(--chart-1))" },
+      confidenceInterval: { label: "Confidence Interval", color: "hsl(var(--chart-2))" },
   };
+  
+  const DONUT_COLORS = [
+      'hsl(var(--chart-1))',
+      'hsl(var(--chart-2))',
+      'hsl(var(--chart-3))',
+      'hsl(var(--chart-4))',
+  ];
 
   return (
     <main className="min-h-screen w-full bg-gradient-to-br from-orange-950/20 via-background to-background">
@@ -322,6 +398,27 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><LineChart /> Predictive Impact Modeling</CardTitle>
+                    <CardDescription>Projected outcomes with confidence intervals. Click a bar to see the stakeholder value breakdown below.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[400px] w-full">
+                     <ChartContainer config={chartConfig} className="h-full w-full">
+                          <ComposedChart data={result.impactAnalysis} layout="vertical" margin={{ left: 120, right: 40 }} onClick={handleBarClick}>
+                            <CartesianGrid horizontal={false} />
+                            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} className="text-xs truncate" />
+                            <XAxis type="number" domain={[0, 100]} />
+                            <Tooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
+                            <Legend />
+                            <Area dataKey="confidenceInterval" type="monotone" fill={chartConfig.confidenceInterval.color} stroke="transparent" fillOpacity={0.3} activeDot={false} />
+                            <Bar dataKey="projectedImpact" barSize={20} fill={chartConfig.projectedImpact.color} radius={[4, 4, 4, 4]} />
+                          </ComposedChart>
+                        </ChartContainer>
+                </CardContent>
+            </Card>
+
               <div className="grid md:grid-cols-2 gap-6">
                  <Card>
                   <CardHeader>
@@ -341,23 +438,34 @@ export default function Home() {
                 </Card>
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><LineChart /> Potential Impact Analysis</CardTitle>
-                        <CardDescription>Estimated impact of each solution across key areas.</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><Users /> Stakeholder Value Distribution</CardTitle>
+                        <CardDescription>
+                            {result.impactAnalysis[activeSolutionIndex]?.name ? `For: ${result.impactAnalysis[activeSolutionIndex].name}` : 'Select a solution to see details.'}
+                        </CardDescription>
                     </CardHeader>
-                    <CardContent className="flex justify-center items-center">
-                        <ChartContainer config={chartConfig} className="h-80 w-full">
-                          <BarChart data={result.graphData} layout="vertical" margin={{ left: 120, top: 20, right: 20, bottom: 20 }}>
-                            <CartesianGrid horizontal={false} />
-                            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} className="text-xs truncate" />
-                            <XAxis type="number" hide />
-                            <Tooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
-                            <Legend />
-                            <Bar dataKey="revenueGrowth" stackId="a" fill={chartConfig.revenueGrowth.color} radius={[4, 0, 0, 4]} />
-                            <Bar dataKey="costReduction" stackId="a" fill={chartConfig.costReduction.color} />
-                            <Bar dataKey="customerSatisfaction" stackId="a" fill={chartConfig.customerSatisfaction.color} radius={[0, 4, 4, 0]} />
-                          </BarChart>
-                        </ChartContainer>
+                    <CardContent className="flex justify-center items-center h-80">
+                       <PieChart width={400} height={400}>
+                          <Pie
+                            activeIndex={activeDonutIndex}
+                            activeShape={renderActiveShape}
+                            data={donutData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            onMouseEnter={onPieEnter}
+                          >
+                            {donutData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
+                            ))}
+                           </Pie>
+                        </PieChart>
                     </CardContent>
+                    <CardFooter>
+                       <p className="text-xs text-center text-muted-foreground w-full">{result.dataNarrative}</p>
+                    </CardFooter>
                 </Card>
               </div>
             </div>
@@ -406,7 +514,7 @@ export default function Home() {
                           control={control}
                           render={({ field }) => (
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <SelectTrigger>
+                              <SelectTrigger suppressHydrationWarning>
                                 <SelectValue placeholder="Select an industry..." />
                               </SelectTrigger>
                               <SelectContent>

@@ -74,19 +74,21 @@ const solutionsPrompt = ai.definePrompt({
       - Complexity Navigation Metrics: Adaptive capacity, resilience under uncertainty, emergent opportunity capture
       - Cross-Pollination Effectiveness: Inter-industry knowledge transfer, symbiotic relationship strength
 
-      ### 3. Impact Visualization Data
+      ### 3. Comprehensive Impact Analysis & Data Storytelling
       
-      For each solution, provide estimated transformation potential (0-100) across:
-      
-      - Revenue Multiplication: Exponential growth through network effects and ecosystem expansion
-      - Operational Evolution: Fundamental efficiency gains through nature-inspired and complexity-based optimization
-      - Stakeholder Ecosystem Value: Holistic satisfaction across all ecosystem participants (customers, partners, community, environment)
-      
-      Note: The 'name' field must exactly match the solution's transformational heading.
+      For each solution, provide a detailed predictive impact model. This data will power an interactive dashboard.
 
-      Your solutions should inspire SME leaders to reimagine their role from industry participants to ecosystem architects, creating self-reinforcing systems of value that continuously evolve and adapt to changing conditions.
-      
-      Generate responses that are simultaneously visionary yet practical, disruptive yet implementable, and innovative yet grounded in proven transformation principles.
+      - **Impact Analysis**:
+        - **name**: Must exactly match the solution's transformational heading.
+        - **projectedImpact**: Your best estimate of the overall potential impact (0-100).
+        - **confidenceInterval**: An array with two numbers [worstCase, bestCase] representing the realistic range of outcomes (e.g., [60, 90]).
+        - **stakeholderValueDistribution**: A breakdown of how the value created by the solution will be distributed. Provide values for:
+          - **Customers**: Direct benefits like better products, lower prices, better experience.
+          - **Business**: Internal gains like increased profit, efficiency, market share.
+          - **Employees**: Benefits for the team like improved work environment, skills, satisfaction.
+          - **Community**: Positive external effects on the local community or society.
+        
+      - **Data Narrative**: A short, compelling story (2-3 sentences) that explains the "why" behind the data for the **first** solution listed. This narrative should guide the user through their potential transformation journey, making the data digestible and actionable. For example: "Implementing the 'Symbiotic Service Weave' will likely boost your overall impact to 75%. While there's a chance it could be as low as 60%, the potential upside reaches 90%. The majority of this new value will be felt directly by your customers through enhanced services, with significant gains also strengthening your business's core profitability."
 
 ---
 **PREDICTIVE ANALYSIS FROM HISTORICAL FEEDBACK:**
@@ -111,33 +113,6 @@ These are solutions that users rejected. Analyze why they were not helpful and g
 {{/each}}
 {{/if}}
 ---
-
-Example Output:
-{
-  "solutions": [
-    {
-      "heading": "Boost Repeat Business",
-      "description": [
-        "Create a tiered loyalty program with bronze, silver, and gold levels.",
-        "Offer exclusive discounts and early access to new products for loyal members.",
-        "Implement a points system where customers earn points for every purchase."
-      ]
-    },
-    {
-      "heading": "Targeted Social Media Ads",
-      "description": [
-        "Utilize Facebook's Lookalike Audiences to find new customers similar to your existing ones.",
-        "Run A/B tests on ad copy and imagery to optimize for engagement.",
-        "Create short-form video ads for platforms like Instagram Reels and TikTok."
-      ]
-    }
-  ],
-  "kpis": ["Increase customer retention rate by 15% within 6 months.", "Achieve a 3:1 return on ad spend (ROAS) for the new social media campaign."],
-  "graphData": [
-      { "name": "Boost Repeat Business", "revenueGrowth": 80, "costReduction": 20, "customerSatisfaction": 90 },
-      { "name": "Targeted Social Media Ads", "revenueGrowth": 90, "costReduction": 10, "customerSatisfaction": 70 }
-  ]
-}
 `,
     });
 
@@ -158,3 +133,4 @@ const generateSolutionsFlow = ai.defineFlow(
     return output!;
   }
 );
+
