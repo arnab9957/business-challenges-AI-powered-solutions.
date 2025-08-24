@@ -37,7 +37,21 @@ import {
   CheckCircle,
   ChevronDown,
   LineChart,
+  Building,
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const industries = [
+    { id: 'tech', label: 'Technology' },
+    { id: 'retail', label: 'Retail & E-commerce' },
+    { id: 'health', label: 'Healthcare & Wellness' },
+    { id: 'finance', label: 'Finance & Insurance' },
+    { id: 'hospitality', label: 'Hospitality & Tourism' },
+    { id: 'manufacturing', label: 'Manufacturing' },
+    { id: 'education', label: 'Education' },
+    { id: 'real_estate', label: 'Real Estate' },
+    { id: 'other', label: 'Other' },
+] as const;
 
 const commonProblems = [
   { id: 'low_sales', label: 'Low Sales / Revenue' },
@@ -63,6 +77,7 @@ const commonProblems = [
 ] as const;
 
 const formSchema = z.object({
+  industry: z.string().min(1, "Please select your industry."),
   businessContext: z.string().optional(),
   commonProblems: z.array(z.string()).optional(),
   customProblem: z.string().min(10, 'Please describe your problem in more detail (min. 10 characters).'),
@@ -80,16 +95,21 @@ function LivePreview({ control, setValue }: { control: any, setValue: any }) {
             .filter(Boolean);
     }, [formData.commonProblems]);
 
+    const selectedIndustryLabel = useMemo(() => {
+        return industries.find(i => i.id === formData.industry)?.label;
+    }, [formData.industry]);
+
     const customProblemWordCount = useMemo(() => {
         return formData.customProblem?.trim().split(/\s+/).filter(Boolean).length || 0;
     }, [formData.customProblem]);
     
     const progress = useMemo(() => {
         let completedSteps = 0;
+        if (formData.industry) completedSteps++;
         if (formData.businessContext && formData.businessContext.length > 0) completedSteps++;
         if (formData.commonProblems && formData.commonProblems.length > 0) completedSteps++;
         if (formData.customProblem && formData.customProblem.length >= 10) completedSteps++;
-        return (completedSteps / 3) * 100;
+        return (completedSteps / 4) * 100;
     }, [formData]);
 
     const removeProblem = (problemLabel: string) => {
@@ -117,6 +137,10 @@ function LivePreview({ control, setValue }: { control: any, setValue: any }) {
                         <Progress value={progress} className="w-full" />
                         <span className="text-sm font-semibold text-muted-foreground">{Math.round(progress)}%</span>
                     </div>
+                </div>
+                 <div>
+                    <Label className="flex items-center gap-2 mb-2"><Building /> Industry</Label>
+                    <p className="text-sm text-muted-foreground">{selectedIndustryLabel || 'Not selected'}</p>
                 </div>
                 <div>
                     <Label className="flex items-center gap-2 mb-2"><Tags /> Selected Problems</Label>
@@ -157,6 +181,7 @@ export default function Home() {
   const { control, handleSubmit, formState: { errors }, setValue } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      industry: '',
       businessContext: '',
       commonProblems: [],
       customProblem: '',
@@ -188,6 +213,7 @@ export default function Home() {
         .filter(Boolean) as string[];
 
       const input: GenerateSolutionsInput = {
+        industry: data.industry,
         businessContext: data.businessContext || 'Not provided',
         commonProblems: selectedProblems,
         customProblem: data.customProblem,
@@ -265,7 +291,7 @@ export default function Home() {
                 Your Action Plan
               </h1>
             </div>
-            <Button onClick={handleReset} variant="outline">
+            <Button onClick={handleReset} variant="outline" suppressHydrationWarning>
               <ChevronLeft className="mr-2 h-4 w-4" />
               New Plan
             </Button>
@@ -340,10 +366,10 @@ export default function Home() {
               <>
                 <p className="text-muted-foreground mb-4">Was this action plan helpful?</p>
                 <div className="flex justify-center gap-4">
-                  <Button variant="outline" size="lg" onClick={() => handleFeedback('helpful')}>
+                  <Button variant="outline" size="lg" onClick={() => handleFeedback('helpful')} suppressHydrationWarning>
                     <ThumbsUp className="mr-2" /> Helpful
                   </Button>
-                  <Button variant="outline" size="lg" onClick={() => handleFeedback('not_helpful')}>
+                  <Button variant="outline" size="lg" onClick={() => handleFeedback('not_helpful')} suppressHydrationWarning>
                     <ThumbsDown className="mr-2" /> Not Helpful
                   </Button>
                 </div>
@@ -370,8 +396,36 @@ export default function Home() {
              <div className="md:col-span-2 space-y-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                   <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Building /> 1. Industry</CardTitle>
+                        <CardDescription>Select the industry your business operates in.</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Controller
+                          name="industry"
+                          control={control}
+                          render={({ field }) => (
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select an industry..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {industries.map(industry => (
+                                  <SelectItem key={industry.id} value={industry.id}>
+                                    {industry.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        {errors.industry && <p className="text-sm text-destructive mt-2">{errors.industry.message}</p>}
+                      </CardContent>
+                    </Card>
+                  
+                  <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><Briefcase /> 1. Business Context</CardTitle>
+                      <CardTitle className="flex items-center gap-2"><Briefcase /> 2. Business Context</CardTitle>
                       <CardDescription>Provide some background about your company. (Optional)</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -387,7 +441,7 @@ export default function Home() {
                   
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><Lightbulb /> 2. Common Problems</CardTitle>
+                      <CardTitle className="flex items-center gap-2"><Lightbulb /> 3. Common Problems</CardTitle>
                       <CardDescription>Select any common challenges your business is facing. You can search for problems too.</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -398,6 +452,7 @@ export default function Home() {
                           value={problemSearch}
                           onChange={(e) => setProblemSearch(e.target.value)}
                           className="pl-10"
+                          suppressHydrationWarning
                         />
                       </div>
                       <Controller
@@ -440,6 +495,7 @@ export default function Home() {
                               type="button"
                               variant="link"
                               onClick={() => setShowAllProblems(!showAllProblems)}
+                              suppressHydrationWarning
                             >
                               {showAllProblems ? 'Show less' : 'Show all'}
                                <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showAllProblems ? 'rotate-180' : ''}`} />
@@ -451,7 +507,7 @@ export default function Home() {
                   
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><MessageSquareText /> 3. Describe Your Main Problem</CardTitle>
+                      <CardTitle className="flex items-center gap-2"><MessageSquareText /> 4. Describe Your Main Problem</CardTitle>
                       <CardDescription>In your own words, what is the single biggest challenge you want to solve?</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -471,7 +527,7 @@ export default function Home() {
                   <div className="flex justify-end">
                     <div className="relative group">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-glow"></div>
-                         <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading}>
+                         <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading} suppressHydrationWarning>
                             Generate Solutions
                             <ArrowRight className="ml-2 h-5 w-5"/>
                         </Button>

@@ -15,6 +15,7 @@ import {
   type GenerateSolutionsOutput,
 } from '@/ai/schemas/generate-solutions-schemas';
 import { retrieveFeedbackForAnalysis } from './process-feedback';
+import { getContextualData } from '../tools/context-tools';
 
 export async function generateSolutions(input: GenerateSolutionsInput): Promise<GenerateSolutionsOutput> {
   return generateSolutionsFlow(input);
@@ -22,6 +23,7 @@ export async function generateSolutions(input: GenerateSolutionsInput): Promise<
 
 const solutionsPrompt = ai.definePrompt({
       name: 'generateSolutionsPrompt',
+      tools: [getContextualData],
       input: {schema: GenerateSolutionsInputSchema.extend({
         helpfulExamples: z.any(),
         notHelpfulExamples: z.any(),
@@ -31,7 +33,8 @@ const solutionsPrompt = ai.definePrompt({
       You are an elite innovation strategist and disruptive business consultant specializing in transformational solutions for Small and Medium-sized Enterprises (SMEs). Your mission is to deliver breakthrough, paradigm-shifting strategies that transcend conventional business wisdom and unlock unprecedented growth opportunities.
 
       Business Context:
-      {{{businessContext}}}
+      - Industry: {{{industry}}}
+      - Business Description: {{{businessContext}}}
       
       {{#if commonProblems.length}}
       Identified Challenge Patterns:
@@ -42,6 +45,11 @@ const solutionsPrompt = ai.definePrompt({
       
       Core Business Challenge:
       {{{customProblem}}}
+
+      ### INSTRUCTIONS
+      1.  **Contextual Analysis (Use Tools):** First, call the \`getContextualData\` tool. Use the user's industry to get relevant market trends and the current economic outlook.
+      2.  **Synthesize & Strategize:** Integrate the tool's output with the user's provided business context and challenges.
+      3.  **Generate Solutions:** Based on your synthesis, generate 3-5 innovative, "out-of-the-box" solutions. These must be highly tailored and consider the timing and external market factors returned by the tool.
 
       ### 1. Ecosystem-Powered Solutions (3-5 innovative strategies)
       

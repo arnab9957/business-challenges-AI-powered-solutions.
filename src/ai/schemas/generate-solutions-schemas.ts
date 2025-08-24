@@ -10,6 +10,7 @@
 import {z} from 'genkit';
 
 export const GenerateSolutionsInputSchema = z.object({
+  industry: z.string().describe("The industry the business operates in."),
   businessContext: z.string().describe('General context about the business.'),
   commonProblems: z.array(z.string()).describe('A list of common problems selected by the user.'),
   customProblem: z.string().describe('A custom problem description provided by the user.'),
