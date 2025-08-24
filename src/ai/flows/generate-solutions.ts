@@ -16,6 +16,7 @@ import {
 } from '@/ai/schemas/generate-solutions-schemas';
 import { retrieveFeedbackForAnalysis } from './process-feedback';
 import { getContextualData } from '../tools/context-tools';
+import { googleAI } from '@genkit-ai/googleai';
 
 export async function generateSolutions(input: GenerateSolutionsInput): Promise<GenerateSolutionsOutput> {
   return generateSolutionsFlow(input);
@@ -23,6 +24,7 @@ export async function generateSolutions(input: GenerateSolutionsInput): Promise<
 
 const solutionsPrompt = ai.definePrompt({
       name: 'generateSolutionsPrompt',
+      model: googleAI.model('gemini-1.5-flash'),
       tools: [getContextualData],
       input: {schema: GenerateSolutionsInputSchema.extend({
         helpfulExamples: z.any(),
