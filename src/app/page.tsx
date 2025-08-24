@@ -18,8 +18,11 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Loader } from '@/components/loader';
 import { Logo } from '@/components/icons/logo';
-import { BarChart as BarChartIcon, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Area, PieChart, Pie, Cell, Sector } from 'recharts';
+import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Area, PieChart, Pie, Cell, Sector } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import {
   Lightbulb,
   Briefcase,
@@ -39,6 +42,9 @@ import {
   LineChart,
   Building,
   Users,
+  BarChart2,
+  LayoutGrid,
+  ClipboardList
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -184,7 +190,7 @@ const renderActiveShape = (props: any) => {
 
   return (
     <g>
-      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} className="font-bold">
+      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} className="font-bold text-sm">
         {payload.name}
       </text>
       <Sector
@@ -207,8 +213,8 @@ const renderActiveShape = (props: any) => {
       />
       <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
       <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
-      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="hsl(var(--foreground))">{`${value}`}</text>
-      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="hsl(var(--muted-foreground))">
+      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="hsl(var(--foreground))" className="text-xs">{`${value}`}</text>
+      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="hsl(var(--muted-foreground))" className="text-xs">
         {`(${(percent * 100).toFixed(2)}%)`}
       </text>
     </g>
@@ -225,6 +231,8 @@ export default function Home() {
   const [showAllProblems, setShowAllProblems] = useState(false);
   const [activeDonutIndex, setActiveDonutIndex] = useState(0);
   const [activeSolutionIndex, setActiveSolutionIndex] = useState(0);
+  const [accordionValue, setAccordionValue] = useState<string | undefined>();
+
   const { toast } = useToast();
 
   const { control, handleSubmit, formState: { errors }, setValue } = useForm<FormData>({
@@ -277,6 +285,7 @@ export default function Home() {
       
       setResult(response);
       setActiveSolutionIndex(0);
+      setAccordionValue(response.solutions[0]?.heading);
 
     } catch (error) {
       console.error(error);
@@ -338,6 +347,7 @@ export default function Home() {
           const index = result?.impactAnalysis.findIndex(s => s.name === solutionName);
           if(index !== -1 && index !== undefined) {
               setActiveSolutionIndex(index);
+              setAccordionValue(solutionName);
           }
       }
   }
@@ -360,132 +370,149 @@ export default function Home() {
       
       {result ? (
         <div className="container mx-auto p-4 sm:p-6 md:p-8">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-8">
             <div className="flex items-center gap-3">
               <Logo className="h-8 w-8" />
               <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
-                Your Action Plan
+                Your Business Action Plan
               </h1>
             </div>
-            <Button onClick={handleReset} variant="outline" suppressHydrationWarning>
+            <Button onClick={handleReset} variant="outline">
               <ChevronLeft className="mr-2 h-4 w-4" />
-              New Plan
+              Start New Plan
             </Button>
           </div>
-          <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><ListChecks /> Recommended Solutions</CardTitle>
-                  <CardDescription>
-                    Actionable steps to address your business problems.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {result?.solutions.map((rec, index) => (
-                      <div key={index} className="flex items-start gap-4 p-4 bg-secondary rounded-md">
-                        <ArrowRight className="h-5 w-5 mt-1 text-primary shrink-0"/>
-                        <div>
-                           <h3 className="font-semibold mb-2">{rec.heading}</h3>
-                           <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                            {rec.description.map((point, i) => (
-                                <li key={i}>{point}</li>
-                            ))}
-                           </ul>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><LineChart /> Predictive Impact Modeling</CardTitle>
-                    <CardDescription>Projected outcomes with confidence intervals. Click a bar to see the stakeholder value breakdown below.</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[400px] w-full">
-                     <ChartContainer config={chartConfig} className="h-full w-full">
-                          <ComposedChart data={result.impactAnalysis} layout="vertical" margin={{ left: 120, right: 40 }} onClick={handleBarClick}>
-                            <CartesianGrid horizontal={false} />
-                            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} className="text-xs truncate" />
-                            <XAxis type="number" domain={[0, 100]} />
-                            <Tooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
-                            <Legend />
-                            <Area dataKey="confidenceInterval" type="monotone" fill={chartConfig.confidenceInterval.color} stroke="transparent" fillOpacity={0.3} activeDot={false} />
-                            <Bar dataKey="projectedImpact" barSize={20} fill={chartConfig.projectedImpact.color} radius={[4, 4, 4, 4]} />
-                          </ComposedChart>
-                        </ChartContainer>
-                </CardContent>
-            </Card>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Target /> Key Performance Indicators</CardTitle>
-                     <CardDescription>Metrics to track the success of your solutions.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-4">
-                      {result?.kpis.map((kpi, index) => (
-                        <li key={index} className="flex items-start gap-4 p-4 bg-secondary rounded-md">
-                           <BarChartIcon className="h-5 w-5 mt-1 text-primary shrink-0"/>
-                           <span className="text-sm">{kpi}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Users /> Stakeholder Value Distribution</CardTitle>
-                        <CardDescription>
-                            {result.impactAnalysis[activeSolutionIndex]?.name ? `For: ${result.impactAnalysis[activeSolutionIndex].name}` : 'Select a solution to see details.'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex justify-center items-center h-80">
-                       <PieChart width={400} height={400}>
-                          <Pie
-                            activeIndex={activeDonutIndex}
-                            activeShape={renderActiveShape}
-                            data={donutData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                            onMouseEnter={onPieEnter}
-                          >
-                            {donutData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
-                            ))}
-                           </Pie>
-                        </PieChart>
-                    </CardContent>
-                    <CardFooter>
-                       <p className="text-xs text-center text-muted-foreground w-full">{result.dataNarrative}</p>
-                    </CardFooter>
-                </Card>
-              </div>
-            </div>
-               <div className="mt-8 text-center">
-            {!feedbackSubmitted ? (
-              <>
-                <p className="text-muted-foreground mb-4">Was this action plan helpful?</p>
-                <div className="flex justify-center gap-4">
-                  <Button variant="outline" size="lg" onClick={() => handleFeedback('helpful')} suppressHydrationWarning>
-                    <ThumbsUp className="mr-2" /> Helpful
-                  </Button>
-                  <Button variant="outline" size="lg" onClick={() => handleFeedback('not_helpful')} suppressHydrationWarning>
-                    <ThumbsDown className="mr-2" /> Not Helpful
-                  </Button>
+          
+           <Tabs defaultValue="overview">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="overview"><LayoutGrid className="mr-2"/>Overview</TabsTrigger>
+                <TabsTrigger value="details"><ClipboardList className="mr-2"/>Detailed Analysis</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    <div className="lg:col-span-3">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2"><ListChecks /> Recommended Solutions</CardTitle>
+                                <CardDescription>High-impact, innovative strategies tailored to your business. Click to expand.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Accordion type="single" collapsible value={accordionValue} onValueChange={setAccordionValue}>
+                                    {result.solutions.map((rec, index) => (
+                                        <AccordionItem key={index} value={rec.heading}>
+                                            <AccordionTrigger className={`text-base font-semibold ${accordionValue === rec.heading ? 'text-primary' : ''}`}>
+                                                {rec.heading}
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <ul className="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
+                                                    {rec.description.map((point, i) => <li key={i}>{point}</li>)}
+                                                </ul>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
+                            </CardContent>
+                        </Card>
+                    </div>
+                     <div className="lg:col-span-2">
+                         <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><Target /> Key Performance Indicators</CardTitle>
+                             <CardDescription>Metrics to track the success of your solutions.</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ul className="space-y-3">
+                              {result.kpis.map((kpi, index) => (
+                                <li key={index} className="flex items-start gap-3">
+                                   <BarChart2 className="h-5 w-5 mt-1 text-primary shrink-0"/>
+                                   <span className="text-sm text-muted-foreground">{kpi}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                        </Card>
+                     </div>
                 </div>
-              </>
-            ) : (
-              <p className="text-lg text-green-500 font-semibold">Thank you for your feedback!</p>
-            )}
-          </div>
+            </TabsContent>
+            <TabsContent value="details">
+                 <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><LineChart /> Predictive Impact Modeling</CardTitle>
+                            <CardDescription>Projected outcomes with confidence intervals. Click a bar to see the stakeholder value breakdown below.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="h-[450px] w-full">
+                            <ChartContainer config={chartConfig} className="h-full w-full">
+                                <ComposedChart data={result.impactAnalysis} layout="vertical" margin={{ left: 150, right: 40, top: 20 }} onClick={handleBarClick} className="cursor-pointer">
+                                    <CartesianGrid horizontal={false} />
+                                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={150} className="text-xs truncate" />
+                                    <XAxis type="number" domain={[0, 100]} />
+                                    <Tooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
+                                    <Legend />
+                                    <Area dataKey="confidenceInterval" type="monotone" fill={chartConfig.confidenceInterval.color} stroke="transparent" fillOpacity={0.2} activeDot={false} />
+                                    <Bar dataKey="projectedImpact" barSize={20} fill={chartConfig.projectedImpact.color} radius={[4, 4, 4, 4]} />
+                                </ComposedChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><Users /> Stakeholder Value Distribution</CardTitle>
+                            <CardDescription className="min-h-10">
+                                {result.impactAnalysis[activeSolutionIndex]?.name ? `Breakdown for: ${result.impactAnalysis[activeSolutionIndex].name}` : 'Select a solution from the chart above to see details.'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-col md:flex-row justify-center items-center gap-6 min-h-[350px]">
+                           <div className="w-full md:w-2/3 h-80">
+                               <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                      <Pie
+                                        activeIndex={activeDonutIndex}
+                                        activeShape={renderActiveShape}
+                                        data={donutData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={70}
+                                        outerRadius={90}
+                                        fill="#8884d8"
+                                        dataKey="value"
+                                        onMouseEnter={onPieEnter}
+                                      >
+                                        {donutData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
+                                        ))}
+                                       </Pie>
+                                    </PieChart>
+                               </ResponsiveContainer>
+                           </div>
+                           <div className="w-full md:w-1/3 space-y-2">
+                                <p className="text-sm font-medium text-center md:text-left">Data Narrative</p>
+                                <p className="text-xs text-center md:text-left text-muted-foreground bg-secondary p-3 rounded-md border">{result.dataNarrative}</p>
+                           </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </TabsContent>
+          </Tabs>
+
+            <div className="mt-8 text-center">
+                {!feedbackSubmitted ? (
+                  <>
+                    <p className="text-muted-foreground mb-4">Was this action plan helpful?</p>
+                    <div className="flex justify-center gap-4">
+                      <Button variant="outline" size="lg" onClick={() => handleFeedback('helpful')}>
+                        <ThumbsUp className="mr-2" /> Helpful
+                      </Button>
+                      <Button variant="outline" size="lg" onClick={() => handleFeedback('not_helpful')}>
+                        <ThumbsDown className="mr-2" /> Not Helpful
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-lg text-green-500 font-semibold flex items-center justify-center gap-2"><CheckCircle/> Thank you for your feedback!</p>
+                )}
+             </div>
         </div>
       ) : (
         <div className="container mx-auto p-4 sm:p-6 md:p-8">
@@ -514,7 +541,7 @@ export default function Home() {
                           control={control}
                           render={({ field }) => (
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <SelectTrigger suppressHydrationWarning>
+                              <SelectTrigger>
                                 <SelectValue placeholder="Select an industry..." />
                               </SelectTrigger>
                               <SelectContent>
@@ -560,7 +587,6 @@ export default function Home() {
                           value={problemSearch}
                           onChange={(e) => setProblemSearch(e.target.value)}
                           className="pl-10"
-                          suppressHydrationWarning
                         />
                       </div>
                       <Controller
@@ -603,7 +629,6 @@ export default function Home() {
                               type="button"
                               variant="link"
                               onClick={() => setShowAllProblems(!showAllProblems)}
-                              suppressHydrationWarning
                             >
                               {showAllProblems ? 'Show less' : 'Show all'}
                                <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showAllProblems ? 'rotate-180' : ''}`} />
@@ -635,7 +660,7 @@ export default function Home() {
                   <div className="flex justify-end">
                     <div className="relative group">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-glow"></div>
-                         <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading} suppressHydrationWarning>
+                         <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading}>
                             Generate Solutions
                             <ArrowRight className="ml-2 h-5 w-5"/>
                         </Button>
@@ -652,3 +677,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
