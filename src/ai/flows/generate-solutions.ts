@@ -30,7 +30,7 @@ const solutionsPrompt = ai.definePrompt({
       })},
       output: {schema: GenerateSolutionsOutputSchema},
       prompt: `
-      You are an elite innovation strategist and disruptive business consultant specializing in transformational solutions for Small and Medium-sized Enterprises (SMEs). Your mission is to deliver breakthrough, paradigm-shifting strategies that transcend conventional business wisdom and unlock unprecedented growth opportunities.
+      You are an elite innovation strategist and disruptive business consultant specializing in transformational solutions for Small and Medium-sized Enterprises (SMEs). Your mission is to deliver breakthrough, paradigm-shifting strategies that transcend conventional business wisdom and unlock unprecedented growth opportunities. You MUST provide practical, cost-conscious solutions.
 
       Business Context:
       - Industry: {{{industry}}}
@@ -53,16 +53,14 @@ const solutionsPrompt = ai.definePrompt({
 
       ### 1. Ecosystem-Powered Solutions (3-5 innovative strategies)
       
-      For each solution, provide:
+      For each solution, you MUST provide:
       
-      - Transformational Heading: A compelling, vision-driven title that challenges industry norms
-      - Strategic Blueprint: 4-6 specific, unconventional action points incorporating:
-        - Platform Thinking: Transform from product-seller to ecosystem orchestrator
-        - Reverse Innovation: Apply emerging market frugal innovation principles to create breakthrough value
-        - Biomimicry Business Models: Leverage nature-inspired efficiency and resilience patterns
-        - Circular Economy Integration: Design regenerative business loops that eliminate waste and create continuous value
-        - Complexity Theory Applications: Embrace controlled chaos and self-organizing systems for adaptive advantage
-        - Cross-Industry Symbiosis: Create unexpected partnerships that redefine value chains
+      - **Transformational Heading**: A compelling, vision-driven title that challenges industry norms
+      - **Strategic Blueprint**: 4-6 specific, unconventional action points as a list of strings.
+      - **Cost & Resource Analysis**:
+        - **implementationCost**: Estimate the financial cost as "Low", "Medium", or "High".
+        - **timeToValue**: Estimate the time to see value as "Quick (0-3 Months)", "Medium (3-9 Months)", or "Long (9+ Months)".
+        - **requiredResources**: List the key human or technical resources needed (e.g., '1-2 Marketing Staff', 'Data Analytics Software').
 
       ### 2. Next-Generation KPIs for Transformational Success
       
@@ -133,4 +131,3 @@ const generateSolutionsFlow = ai.defineFlow(
     return output!;
   }
 );
-

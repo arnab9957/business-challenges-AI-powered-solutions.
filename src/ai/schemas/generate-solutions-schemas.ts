@@ -20,6 +20,9 @@ export type GenerateSolutionsInput = z.infer<typeof GenerateSolutionsInputSchema
 const SolutionSchema = z.object({
   heading: z.string().describe('A short, catchy heading for the solution.'),
   description: z.array(z.string()).describe('The detailed, actionable solution, broken down into a list of bullet points.'),
+  implementationCost: z.enum(["Low", "Medium", "High"]).describe("The estimated financial cost to implement the solution."),
+  timeToValue: z.enum(["Quick (0-3 Months)", "Medium (3-9 Months)", "Long (9+ Months)"]).describe("The estimated time to see a significant return on investment or value from the solution."),
+  requiredResources: z.array(z.string()).describe("A list of key resources required to implement the solution (e.g., '1-2 Marketing Staff', 'Data Analytics Software', 'External Consultant').")
 });
 
 const ImpactAnalysisSchema = z.object({
@@ -42,4 +45,3 @@ export const GenerateSolutionsOutputSchema = z.object({
   dataNarrative: z.string().describe("A short, compelling story that explains the 'why' behind the data for the primary solution, guiding the user through their potential transformation journey.")
 });
 export type GenerateSolutionsOutput = z.infer<typeof GenerateSolutionsOutputSchema>;
-

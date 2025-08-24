@@ -44,7 +44,10 @@ import {
   Users,
   BarChart2,
   LayoutGrid,
-  ClipboardList
+  ClipboardList,
+  DollarSign,
+  Clock,
+  Wrench
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -397,16 +400,39 @@ export default function Home() {
                                 <CardDescription>High-impact, innovative strategies tailored to your business. Click to expand.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <Accordion type="single" collapsible value={accordionValue} onValueChange={setAccordionValue}>
+                                <Accordion type="single" collapsible value={accordionValue} onValueChange={setAccordionValue} className="w-full">
                                     {result.solutions.map((rec, index) => (
                                         <AccordionItem key={index} value={rec.heading}>
                                             <AccordionTrigger className={`text-base font-semibold ${accordionValue === rec.heading ? 'text-primary' : ''}`}>
                                                 {rec.heading}
                                             </AccordionTrigger>
                                             <AccordionContent>
-                                                <ul className="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
-                                                    {rec.description.map((point, i) => <li key={i}>{point}</li>)}
-                                                </ul>
+                                                <div className="space-y-4">
+                                                    <div className="flex flex-wrap gap-4 text-sm">
+                                                        <div className="flex items-center gap-2">
+                                                            <DollarSign className="h-4 w-4 text-muted-foreground"/>
+                                                            <span className="font-medium">Cost:</span>
+                                                            <Badge variant={rec.implementationCost === 'High' ? 'destructive' : (rec.implementationCost === 'Medium' ? 'secondary' : 'default')}>{rec.implementationCost}</Badge>
+                                                        </div>
+                                                         <div className="flex items-center gap-2">
+                                                            <Clock className="h-4 w-4 text-muted-foreground"/>
+                                                            <span className="font-medium">Time to Value:</span>
+                                                            <Badge variant="secondary">{rec.timeToValue}</Badge>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Wrench className="h-4 w-4 text-muted-foreground"/>
+                                                            <span className="font-medium">Resources:</span>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {rec.requiredResources.map(res => <Badge key={res} variant="outline">{res}</Badge>)}
+                                                        </div>
+                                                    </div>
+                                                    <ul className="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
+                                                        {rec.description.map((point, i) => <li key={i}>{point}</li>)}
+                                                    </ul>
+                                                </div>
                                             </AccordionContent>
                                         </AccordionItem>
                                     ))}
@@ -441,18 +467,20 @@ export default function Home() {
                             <CardTitle className="flex items-center gap-2"><LineChart /> Predictive Impact Modeling</CardTitle>
                             <CardDescription>Projected outcomes with confidence intervals. Click a bar to see the stakeholder value breakdown below.</CardDescription>
                         </CardHeader>
-                        <CardContent className="h-[450px] w-full">
-                            <ChartContainer config={chartConfig} className="h-full w-full">
-                                <ComposedChart data={result.impactAnalysis} layout="vertical" margin={{ left: 150, right: 40, top: 20 }} onClick={handleBarClick} className="cursor-pointer">
-                                    <CartesianGrid horizontal={false} />
-                                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={150} className="text-xs truncate" />
-                                    <XAxis type="number" domain={[0, 100]} />
-                                    <Tooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
-                                    <Legend />
-                                    <Area dataKey="confidenceInterval" type="monotone" fill={chartConfig.confidenceInterval.color} stroke="transparent" fillOpacity={0.2} activeDot={false} />
-                                    <Bar dataKey="projectedImpact" barSize={20} fill={chartConfig.projectedImpact.color} radius={[4, 4, 4, 4]} />
-                                </ComposedChart>
-                            </ChartContainer>
+                        <CardContent className="h-[450px] w-full flex justify-center items-center">
+                           <div className="w-full h-80">
+                                <ChartContainer config={chartConfig} className="h-full w-full">
+                                    <ComposedChart data={result.impactAnalysis} layout="vertical" margin={{ left: 150, right: 40, top: 20 }} onClick={handleBarClick} className="cursor-pointer">
+                                        <CartesianGrid horizontal={false} />
+                                        <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={150} className="text-xs truncate" />
+                                        <XAxis type="number" domain={[0, 100]} />
+                                        <Tooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
+                                        <Legend />
+                                        <Area dataKey="confidenceInterval" type="monotone" fill="var(--color-confidenceInterval)" stroke="transparent" fillOpacity={0.2} activeDot={false} />
+                                        <Bar dataKey="projectedImpact" barSize={20} fill="var(--color-projectedImpact)" radius={[4, 4, 4, 4]} />
+                                    </ComposedChart>
+                                </ChartContainer>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -677,5 +705,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
