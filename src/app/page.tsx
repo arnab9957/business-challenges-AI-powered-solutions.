@@ -136,13 +136,13 @@ function LivePreview({ control, setValue }: { control: any, setValue: any }) {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <CheckCircle />
-                    Live Preview
+                    Your Progress
                 </CardTitle>
-                <CardDescription>Your inputs will appear here as you type.</CardDescription>
+                <CardDescription>Your inputs will appear here as you complete the form.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div>
-                    <Label className="text-sm font-medium">Form Progress</Label>
+                    <Label className="text-sm font-medium">Form Completion</Label>
                     <div className="flex items-center gap-3 mt-2">
                         <Progress value={progress} className="w-full" />
                         <span className="text-sm font-semibold text-muted-foreground">{Math.round(progress)}%</span>
@@ -170,8 +170,8 @@ function LivePreview({ control, setValue }: { control: any, setValue: any }) {
                     </div>
                 </div>
                  <div>
-                    <Label className="flex items-center gap-2 mb-2"><FileText /> Main Problem</Label>
-                     <p className="text-xs text-muted-foreground">{customProblemWordCount} words</p>
+                    <Label className="flex items-center gap-2 mb-2"><FileText /> Main Problem Summary</Label>
+                     <p className="text-xs text-muted-foreground">{customProblemWordCount} {customProblemWordCount === 1 ? 'word' : 'words'}</p>
                 </div>
             </CardContent>
         </Card>
@@ -216,9 +216,9 @@ const renderActiveShape = (props: any) => {
       />
       <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
       <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
-      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="hsl(var(--foreground))" className="text-xs">{`Value: ${value}`}</text>
+      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="hsl(var(--foreground))" className="text-xs">{`Value Score: ${value}`}</text>
       <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="hsl(var(--muted-foreground))" className="text-xs">
-        {`(Share: ${(percent * 100).toFixed(2)}%)`}
+        {`(${(percent * 100).toFixed(2)}% Share)`}
       </text>
     </g>
   );
@@ -369,7 +369,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen w-full bg-gradient-to-br from-orange-950/20 via-background to-background">
-      {isLoading && <Loader text="Generating your solutions..." />}
+      {isLoading && <Loader text="Generating your personalized action plan..." />}
       
       {result ? (
         <div className="container mx-auto p-4 sm:p-6 md:p-8">
@@ -382,7 +382,7 @@ export default function Home() {
             </div>
             <Button onClick={handleReset} variant="outline">
               <ChevronLeft className="mr-2 h-4 w-4" />
-              Start New Plan
+              Create New Plan
             </Button>
           </div>
           
@@ -444,7 +444,7 @@ export default function Home() {
                          <Card>
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2"><Target /> Key Performance Indicators</CardTitle>
-                             <CardDescription>Metrics to track the success of your solutions.</CardDescription>
+                             <CardDescription>Metrics to track the success of your new initiatives.</CardDescription>
                           </CardHeader>
                           <CardContent>
                             <ul className="space-y-3">
@@ -552,7 +552,7 @@ export default function Home() {
                 </h1>
               </div>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Describe your business challenges and get AI-powered solutions. This form is a live preview - your inputs will be reflected on the right.
+                Turn your business challenges into growth opportunities. Describe your situation to receive an AI-powered action plan.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
@@ -560,7 +560,7 @@ export default function Home() {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                   <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Building /> 1. Industry</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><Building /> 1. Your Industry</CardTitle>
                         <CardDescription>Select the industry your business operates in.</CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -589,14 +589,14 @@ export default function Home() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2"><Briefcase /> 2. Business Context</CardTitle>
-                      <CardDescription>Provide some background about your company. (Optional)</CardDescription>
+                      <CardDescription>Provide some background about your company. What do you do? Who are your customers? (Optional)</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <Controller
                         name="businessContext"
                         control={control}
                         render={({ field }) => (
-                          <Textarea {...field} placeholder="e.g., We are a small e-commerce business selling handmade jewelry..." className="h-28" />
+                          <Textarea {...field} placeholder="e.g., We are a small e-commerce business selling handmade jewelry, primarily targeting young adults..." className="h-28" />
                         )}
                       />
                     </CardContent>
@@ -605,7 +605,7 @@ export default function Home() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2"><Lightbulb /> 3. Common Problems</CardTitle>
-                      <CardDescription>Select any common challenges your business is facing. You can search for problems too.</CardDescription>
+                      <CardDescription>Select any common challenges your business is facing. You can also search for problems.</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="relative mb-4">
@@ -648,7 +648,7 @@ export default function Home() {
                       />
                        {filteredProblems.length === 0 && (
                           <p className="text-muted-foreground text-sm text-center mt-4">
-                            No problems found.
+                            No problems found matching your search.
                           </p>
                         )}
                          {!problemSearch && filteredProblems.length > 7 && (
@@ -668,8 +668,8 @@ export default function Home() {
                   
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><MessageSquareText /> 4. Describe Your Main Problem</CardTitle>
-                      <CardDescription>In your own words, what is the single biggest challenge you want to solve?</CardDescription>
+                      <CardTitle className="flex items-center gap-2"><MessageSquareText /> 4. Your Main Challenge</CardTitle>
+                      <CardDescription>In your own words, what is the single biggest challenge you want to solve right now?</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <Controller
@@ -677,7 +677,7 @@ export default function Home() {
                         control={control}
                         render={({ field }) => (
                           <>
-                            <Textarea {...field} placeholder="Describe your primary goal, main operational issue, key market concern, etc." className="h-40" />
+                            <Textarea {...field} placeholder="Describe your primary goal, main operational issue, key market concern, etc. The more detail, the better the recommendations." className="h-40" />
                             {errors.customProblem && <p className="text-sm text-destructive mt-2">{errors.customProblem.message}</p>}
                           </>
                         )}
@@ -688,8 +688,8 @@ export default function Home() {
                   <div className="flex justify-end">
                     <div className="relative group">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-glow"></div>
-                         <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading}>
-                            Generate Solutions
+ <Button type="submit" size="lg" className="relative text-primary-foreground font-bold text-lg transition-all duration-300 disabled:opacity-50 hover:-translate-y-1" disabled={isLoading}>
+                            Generate Action Plan
                             <ArrowRight className="ml-2 h-5 w-5"/>
                         </Button>
                     </div>
@@ -705,5 +705,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
