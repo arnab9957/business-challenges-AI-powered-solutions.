@@ -81,11 +81,12 @@ const solutionsPrompt = ai.definePrompt({
       Generate responses that are simultaneously visionary yet practical, disruptive yet implementable, and innovative yet grounded in proven transformation principles.
 
 ---
-**LEARNING FROM PAST FEEDBACK:**
-You should learn from past examples of good and bad solutions based on user feedback.
+**PREDICTIVE ANALYSIS FROM HISTORICAL FEEDBACK:**
+Your primary directive is to use historical data to predict which solutions will be most effective. Analyze the provided examples of past user feedback. Identify patterns correlating business problems to successful (helpful) and unsuccessful (not helpful) solutions. Prioritize and generate solutions that have the highest probability of success based on this historical analysis.
 
 {{#if helpfulExamples.length}}
-**Examples of HELPFUL solutions (DO MORE OF THIS):**
+**Historical Data: HELPFUL solutions (High Success Probability - DO MORE OF THIS):**
+These are solutions that users found valuable for similar problems.
 {{#each helpfulExamples}}
 - **Problem:** {{this.input.customProblem}}
   - **Solution:** {{this.output}}
@@ -93,7 +94,8 @@ You should learn from past examples of good and bad solutions based on user feed
 {{/if}}
 
 {{#if notHelpfulExamples.length}}
-**Examples of NOT HELPFUL solutions (AVOID THIS):**
+**Historical Data: NOT HELPFUL solutions (Low Success Probability - AVOID THIS):**
+These are solutions that users rejected. Analyze why they were not helpful and generate different, more innovative strategies. Avoid generic or obvious suggestions.
 {{#each notHelpfulExamples}}
 - **Problem:** {{this.input.customProblem}}
   - **Solution:** {{this.output}}
