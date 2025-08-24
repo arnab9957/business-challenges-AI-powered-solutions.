@@ -318,8 +318,8 @@ export default function Home() {
                         <CardTitle className="flex items-center gap-2"><LineChart /> Potential Impact Analysis</CardTitle>
                         <CardDescription>Estimated impact of each solution across key areas.</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <ChartContainer config={chartConfig} className="h-64 w-full">
+                    <CardContent className="flex justify-center items-center">
+                        <ChartContainer config={chartConfig} className="h-80 w-full">
                           <BarChart data={result.graphData} layout="vertical" margin={{ left: 120, top: 20, right: 20, bottom: 20 }}>
                             <CartesianGrid horizontal={false} />
                             <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} className="text-xs truncate" />
