@@ -8,7 +8,6 @@ import '@/ai/schemas/process-feedback-schemas.ts';
 import '@/ai/tools/context-tools.ts';
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
-import { ai } from './genkit';
 
 
 genkit({
