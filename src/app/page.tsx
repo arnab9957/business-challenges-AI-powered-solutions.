@@ -335,9 +335,11 @@ export default function Home() {
   };
   
   const donutData = useMemo(() => {
-      if (!result || !result.impactAnalysis[activeSolutionIndex]) return [];
-      const distribution = result.impactAnalysis[activeSolutionIndex].stakeholderValueDistribution;
-      return Object.entries(distribution).map(([name, value]) => ({ name, value }));
+    if (!result?.impactAnalysis?.[activeSolutionIndex]?.stakeholderValueDistribution) {
+        return [];
+    }
+    const distribution = result.impactAnalysis[activeSolutionIndex].stakeholderValueDistribution;
+    return Object.entries(distribution).map(([name, value]) => ({ name, value }));
   }, [result, activeSolutionIndex]);
 
   const onPieEnter = (_: any, index: number) => {
