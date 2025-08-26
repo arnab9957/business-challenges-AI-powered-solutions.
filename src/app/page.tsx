@@ -1,12 +1,13 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { generateSolutions } from '@/ai/flows/generate-solutions';
 import { processFeedback } from '@/ai/flows/process-feedback';
+import { chatWithSolution, type ChatMessage } from '@/ai/flows/chat-with-solution';
 import type { GenerateSolutionsInput, GenerateSolutionsOutput } from '@/ai/schemas/generate-solutions-schemas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -47,7 +48,10 @@ import {
   ClipboardList,
   DollarSign,
   Clock,
-  Wrench
+  Wrench,
+  Bot,
+  User,
+  Send
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -225,6 +229,114 @@ const renderActiveShape = (props: any) => {
 };
 
 
+function ChatSection({ solutionContext }: { solutionContext: GenerateSolutionsOutput }) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || isChatLoading) return;
+
+    const newMessages: ChatMessage[] = [...messages, { role: 'user', content: chatInput }];
+    setMessages(newMessages);
+    setChatInput('');
+    setIsChatLoading(true);
+
+    try {
+      const chatResponse = await chatWithSolution({
+        solutionContext,
+        history: messages,
+        query: chatInput,
+      });
+      setMessages([...newMessages, { role: 'model', content: chatResponse }]);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'An error occurred',
+        description: 'Failed to get a response. Please try again.',
+      });
+       setMessages(messages);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
+  return (
+    <Card className="mt-8">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><MessageSquareText /> Ask a Follow-up Question</CardTitle>
+        <CardDescription>Have questions about the proposed solutions? Ask the AI consultant for clarification.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div ref={chatContainerRef} className="h-80 overflow-y-auto p-4 border rounded-md bg-secondary/50 space-y-4">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                <Bot className="h-12 w-12 mb-4" />
+                <p className="text-lg font-medium">I'm ready to help!</p>
+                <p>Ask me anything about the solutions, KPIs, or impact analysis.</p>
+                 <p className="text-xs mt-4">e.g., "Can you elaborate on the first solution?" or "Why did you choose these KPIs?"</p>
+              </div>
+            ) : (
+              messages.map((msg, index) => (
+                <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                  {msg.role === 'model' && (
+                    <div className="p-2 bg-primary rounded-full text-primary-foreground">
+                      <Bot className="h-5 w-5" />
+                    </div>
+                  )}
+                  <div className={`rounded-lg px-4 py-2 max-w-lg ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-background'}`}>
+                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  </div>
+                   {msg.role === 'user' && (
+                    <div className="p-2 bg-muted-foreground rounded-full text-background">
+                      <User className="h-5 w-5" />
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+            {isChatLoading && (
+              <div className="flex items-start gap-3">
+                 <div className="p-2 bg-primary rounded-full text-primary-foreground">
+                    <Bot className="h-5 w-5" />
+                  </div>
+                 <div className="rounded-lg px-4 py-2 max-w-lg bg-background flex items-center gap-2">
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-75"></div>
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-150"></div>
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-300"></div>
+                 </div>
+              </div>
+            )}
+          </div>
+          <form onSubmit={handleChatSubmit} className="flex gap-2">
+            <Input
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="e.g., Explain the 'time to value' for the second solution..."
+              disabled={isChatLoading}
+            />
+            <Button type="submit" disabled={isChatLoading || !chatInput.trim()}>
+              <Send className="mr-2" /> Send
+            </Button>
+          </form>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+
 export default function Home() {
   const [lastInput, setLastInput] = useState<GenerateSolutionsInput | null>(null);
   const [result, setResult] = useState<GenerateSolutionsOutput | null>(null);
@@ -335,7 +447,10 @@ export default function Home() {
   };
   
   const activeImpactAnalysis = useMemo(() => {
-    return result?.impactAnalysis?.[activeSolutionIndex];
+    if (!result?.impactAnalysis || !result.impactAnalysis[activeSolutionIndex]) {
+        return null;
+    }
+    return result.impactAnalysis[activeSolutionIndex];
   }, [result, activeSolutionIndex]);
 
   const donutData = useMemo(() => {
@@ -529,6 +644,8 @@ export default function Home() {
                 </div>
             </TabsContent>
           </Tabs>
+          
+          <ChatSection solutionContext={result} />
 
             <div className="mt-8 text-center">
                 {!feedbackSubmitted ? (
