@@ -23,11 +23,19 @@ export async function chatWithSolution(input: ChatInput): Promise<string> {
   return chatWithSolutionFlow(input);
 }
 
+// Define a schema that can accept either a raw string or an object with a solution property.
+const ChatOutputSchema = z.union([
+    z.string(),
+    z.object({ solution: z.string() }),
+    z.object({ answer: z.string() }),
+]).optional();
+
+
 const chatPrompt = ai.definePrompt({
       name: 'chatPrompt',
       model: googleAI.model('gemini-1.5-flash'),
       input: {schema: ChatInputSchema},
-      output: {schema: z.string().optional()},
+      output: {schema: ChatOutputSchema},
       prompt: `
 You are an expert business consultant AI. Your role is to answer follow-up questions about the business solutions you have already provided.
 You MUST NOT invent new solutions or provide information outside of the provided context.
@@ -66,6 +74,25 @@ const chatWithSolutionFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await chatPrompt(input);
-    return output || "I'm sorry, I couldn't generate a response. Please try asking in a different way.";
+    
+    if (!output) {
+      return "I'm sorry, I couldn't generate a response. Please try asking in a different way.";
+    }
+
+    // Check if the output is a string or an object and extract the answer accordingly.
+    if (typeof output === 'string') {
+        return output;
+    }
+    if (typeof output === 'object') {
+        if ('solution' in output && typeof output.solution === 'string') {
+            return output.solution;
+        }
+        if ('answer' in output && typeof output.answer === 'string') {
+            return output.answer;
+        }
+    }
+    
+    return "I'm sorry, I received an unexpected response format. Please try again.";
   }
 );
+
