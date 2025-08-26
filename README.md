@@ -22,10 +22,16 @@ To get started with local development, first install the dependencies:
 npm install
 ```
 
-Then, run the development server:
+Then, you will need to run two separate commands in two separate terminals.
 
+**Terminal 1: Run the Next.js Development Server**
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:9002](http://localhost:9002) with your browser to see the result.
+**Terminal 2: Run the Genkit Development Server**
+```bash
+npm run genkit:watch
+```
+
+Open [http://localhost:9002](http://localhost:9002) with your browser to see the result. The Genkit server runs on a different port and is used by the Next.js app to make AI requests.
