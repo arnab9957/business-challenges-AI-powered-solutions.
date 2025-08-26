@@ -27,7 +27,7 @@ const chatPrompt = ai.definePrompt({
       name: 'chatPrompt',
       model: googleAI.model('gemini-1.5-flash'),
       input: {schema: ChatInputSchema},
-      output: {schema: z.string()},
+      output: {schema: z.string().optional()},
       prompt: `
 You are an expert business consultant AI. Your role is to answer follow-up questions about the business solutions you have already provided.
 You MUST NOT invent new solutions or provide information outside of the provided context.
