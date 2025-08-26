@@ -61,7 +61,7 @@ Your response MUST be a single, raw string containing ONLY the answer.
 DO NOT wrap it in JSON.
 DO NOT add any other formatting.
 DO NOT use markdown.
-Your entire output must be only the text of your answer.
+Your entire output must be more explainabl on that topic.
 `,
     });
 
