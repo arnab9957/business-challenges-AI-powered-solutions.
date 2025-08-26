@@ -265,7 +265,6 @@ function ChatSection({ solutionContext }: { solutionContext: GenerateSolutionsOu
         title: 'An error occurred',
         description: 'Failed to get a response. Please try again.',
       });
-       setMessages(messages);
     } finally {
       setIsChatLoading(false);
     }
