@@ -334,13 +334,17 @@ export default function Home() {
     }
   };
   
+  const activeImpactAnalysis = useMemo(() => {
+    return result?.impactAnalysis?.[activeSolutionIndex];
+  }, [result, activeSolutionIndex]);
+
   const donutData = useMemo(() => {
-    if (!result?.impactAnalysis?.[activeSolutionIndex]?.stakeholderValueDistribution) {
+    if (!activeImpactAnalysis?.stakeholderValueDistribution) {
         return [];
     }
-    const distribution = result.impactAnalysis[activeSolutionIndex].stakeholderValueDistribution;
+    const distribution = activeImpactAnalysis.stakeholderValueDistribution;
     return Object.entries(distribution).map(([name, value]) => ({ name, value }));
-  }, [result, activeSolutionIndex]);
+  }, [activeImpactAnalysis]);
 
   const onPieEnter = (_: any, index: number) => {
     setActiveDonutIndex(index);
@@ -490,7 +494,7 @@ export default function Home() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><Users /> Stakeholder Value Distribution</CardTitle>
                             <CardDescription className="min-h-10">
-                                {result.impactAnalysis[activeSolutionIndex]?.name ? `Breakdown for: ${result.impactAnalysis[activeSolutionIndex].name}` : 'Select a solution from the chart above to see details.'}
+                                {activeImpactAnalysis?.name ? `Breakdown for: ${activeImpactAnalysis.name}` : 'Select a solution from the chart above to see details.'}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col md:flex-row justify-center items-center gap-6 min-h-[350px]">
