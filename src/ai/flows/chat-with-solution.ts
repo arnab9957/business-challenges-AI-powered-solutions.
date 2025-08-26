@@ -49,6 +49,7 @@ This is the action plan you have already generated. Base your answers ONLY on th
 
 ## Your Task ##
 Based on the provided solution context and the conversation history, answer the user's new question.
+Your response MUST be a single, raw string containing only the answer. Do not wrap it in JSON or any other format.
 `,
     });
 
